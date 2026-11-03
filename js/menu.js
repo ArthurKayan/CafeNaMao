@@ -2,15 +2,44 @@
   "use strict";
 
   const dados = window.CafeNaMaoDados;
+  const detalhes = window.CafeNaMaoDetalhes;
   const lista = document.getElementById("lista-bebidas");
   const status = document.getElementById("status-catalogo");
   const estado = document.getElementById("estado-catalogo");
   const mensagem = document.getElementById("mensagem-estado");
   const acao = document.getElementById("acao-estado");
+  const painelDetalhes = document.getElementById("painel-detalhes");
+  const detalhesCategoria = document.getElementById("detalhes-categoria");
+  const detalhesTitulo = document.getElementById("detalhes-titulo");
+  const detalhesDescricao = document.getElementById("detalhes-descricao");
+  const detalhesPreco = document.getElementById("detalhes-preco");
+  const detalhesTotal = document.getElementById("detalhes-total");
+  const detalhesQuantidade = document.getElementById("detalhes-quantidade");
+  const detalhesErro = document.getElementById("detalhes-erro");
+  const detalhesFechar = document.getElementById("detalhes-fechar");
 
-  if (!lista || !status || !estado || !mensagem || !acao) {
+  if (
+    !lista ||
+    !status ||
+    !estado ||
+    !mensagem ||
+    !acao ||
+    !detalhes ||
+    !painelDetalhes ||
+    !detalhesCategoria ||
+    !detalhesTitulo ||
+    !detalhesDescricao ||
+    !detalhesPreco ||
+    !detalhesTotal ||
+    !detalhesQuantidade ||
+    !detalhesErro ||
+    !detalhesFechar
+  ) {
     return;
   }
+
+  let bebidaAtual = null;
+  let botaoQueAbriu = null;
 
   const parametros = new URLSearchParams(window.location.search);
   const estadoDaUrl = parametros.get("estado");
@@ -46,6 +75,69 @@
     return article;
   }
 
+  function atualizarTotalDetalhes() {
+    const quantidade = Number(detalhesQuantidade.value);
+    const erro = detalhes.validarQuantidade(quantidade);
+
+    if (erro) {
+      detalhesErro.textContent = erro;
+      detalhesQuantidade.setAttribute("aria-invalid", "true");
+      detalhesTotal.textContent = "—";
+      return;
+    }
+
+    detalhesErro.textContent = "";
+    detalhesQuantidade.removeAttribute("aria-invalid");
+    detalhesTotal.textContent = dados.formatarPreco(
+      detalhes.calcularTotal(bebidaAtual.precoCentavos, quantidade)
+    );
+  }
+
+  function abrirDetalhes(bebida, botao) {
+    bebidaAtual = bebida;
+    botaoQueAbriu = botao;
+
+    detalhesCategoria.textContent = bebida.categoria;
+    detalhesTitulo.textContent = bebida.nome;
+    detalhesDescricao.textContent = bebida.descricao;
+    detalhesPreco.textContent = dados.formatarPreco(bebida.precoCentavos);
+    detalhesQuantidade.value = "1";
+    atualizarTotalDetalhes();
+
+    if (typeof painelDetalhes.showModal === "function") {
+      painelDetalhes.showModal();
+    } else {
+      painelDetalhes.setAttribute("open", "");
+    }
+
+    detalhesQuantidade.focus();
+    detalhesQuantidade.select();
+  }
+
+  function fecharDetalhes() {
+    if (typeof painelDetalhes.close === "function") {
+      painelDetalhes.close();
+    } else {
+      painelDetalhes.removeAttribute("open");
+
+      if (botaoQueAbriu && document.contains(botaoQueAbriu)) {
+        botaoQueAbriu.focus();
+      }
+    }
+  }
+
+  painelDetalhes.addEventListener("close", function () {
+    if (botaoQueAbriu && document.contains(botaoQueAbriu)) {
+      botaoQueAbriu.focus();
+    }
+
+    botaoQueAbriu = null;
+    bebidaAtual = null;
+  });
+
+  detalhesFechar.addEventListener("click", fecharDetalhes);
+  detalhesQuantidade.addEventListener("input", atualizarTotalDetalhes);
+
   function criarCardBebida(bebida, indice) {
     const article = document.createElement("article");
     article.className = "bebida";
@@ -78,7 +170,21 @@
     preco.className = "bebida__preco";
     preco.textContent = dados.formatarPreco(bebida.precoCentavos);
 
-    article.append(topo, titulo, descricao, preco);
+    const acoes = document.createElement("div");
+    acoes.className = "bebida__acoes";
+
+    const botaoDetalhes = document.createElement("button");
+    botaoDetalhes.type = "button";
+    botaoDetalhes.className = "botao botao--secundario bebida__detalhes";
+    botaoDetalhes.textContent = "Ver detalhes";
+    botaoDetalhes.setAttribute("aria-haspopup", "dialog");
+    botaoDetalhes.setAttribute("aria-controls", "painel-detalhes");
+    botaoDetalhes.addEventListener("click", function () {
+      abrirDetalhes(bebida, botaoDetalhes);
+    });
+
+    acoes.append(botaoDetalhes);
+    article.append(topo, titulo, descricao, preco, acoes);
     return article;
   }
 

@@ -437,6 +437,128 @@ a {
   letter-spacing: -0.03em;
 }
 
+.bebida__acoes {
+  margin-top: 1.25rem;
+}
+
+.bebida__detalhes {
+  width: 100%;
+}
+
+.detalhes {
+  width: min(calc(100% - 2rem), 520px);
+  max-height: calc(100vh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  background-color: var(--creme);
+  border: var(--borda);
+  box-shadow: 12px 12px 0 var(--carvao);
+  color: var(--carvao);
+}
+
+.detalhes::backdrop {
+  background-color: rgba(37, 37, 37, 0.62);
+}
+
+.detalhes__conteudo {
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+.detalhes__categoria {
+  display: inline-block;
+  margin-bottom: 0.9rem;
+  padding: 0.2rem 0.55rem;
+  background-color: var(--cinza);
+  border: 2px solid var(--carvao);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detalhes h2 {
+  margin-bottom: 0.75rem;
+  font-family: var(--fonte-titulo);
+  font-size: clamp(1.8rem, 5vw, 2.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.detalhes__descricao {
+  margin-bottom: 1.5rem;
+}
+
+.detalhes__valores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.detalhes__valores div {
+  padding: 0.85rem 1rem;
+  background-color: var(--branco);
+  border: 3px solid var(--carvao);
+}
+
+.detalhes__valores dt {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detalhes__valores dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--fonte-titulo);
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+
+.detalhes__quantidade {
+  margin-bottom: 1.5rem;
+}
+
+.detalhes label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-weight: 800;
+}
+
+.detalhes__ajuda {
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.detalhes input[type="number"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--branco);
+  border: var(--borda);
+  border-radius: 0;
+  color: var(--carvao);
+  font-family: var(--fonte-titulo);
+  font-size: 1.2rem;
+}
+
+.detalhes input[type="number"][aria-invalid="true"] {
+  border-color: #b3261e;
+}
+
+.detalhes__erro {
+  min-height: 1.4em;
+  margin: 0.5rem 0 0;
+  color: #b3261e;
+  font-weight: 700;
+}
+
+.detalhes__fechar {
+  width: 100%;
+}
+
 .bebida--esqueleto {
   pointer-events: none;
 }
@@ -705,6 +827,10 @@ a {
   }
 
   .catalogo__grade {
+    grid-template-columns: 1fr;
+  }
+
+  .detalhes__valores {
     grid-template-columns: 1fr;
   }
 

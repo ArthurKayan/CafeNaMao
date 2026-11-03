@@ -60,7 +60,50 @@
       </div>
     </footer>
 
+    <dialog id="painel-detalhes" class="detalhes" aria-labelledby="detalhes-titulo">
+      <div class="detalhes__conteudo">
+        <p id="detalhes-categoria" class="detalhes__categoria"></p>
+        <h2 id="detalhes-titulo"></h2>
+        <p id="detalhes-descricao" class="detalhes__descricao"></p>
+
+        <dl class="detalhes__valores">
+          <div>
+            <dt>Preço unitário</dt>
+            <dd id="detalhes-preco"></dd>
+          </div>
+          <div>
+            <dt>Total parcial</dt>
+            <dd id="detalhes-total" aria-live="polite"></dd>
+          </div>
+        </dl>
+
+        <div class="detalhes__quantidade">
+          <label for="detalhes-quantidade">Quantidade</label>
+          <p id="detalhes-ajuda" class="detalhes__ajuda">
+            Escolha de 1 a 10 unidades.
+          </p>
+          <input
+            id="detalhes-quantidade"
+            name="quantidade"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="10"
+            step="1"
+            value="1"
+            aria-describedby="detalhes-ajuda detalhes-erro"
+          />
+          <p id="detalhes-erro" class="detalhes__erro" role="alert"></p>
+        </div>
+
+        <button type="button" id="detalhes-fechar" class="botao botao--primario detalhes__fechar">
+          Fechar
+        </button>
+      </div>
+    </dialog>
+
     <script src="js/dados.js" defer></script>
+    <script src="js/detalhes.js" defer></script>
     <script src="js/menu.js" defer></script>
   </body>
 </html>
