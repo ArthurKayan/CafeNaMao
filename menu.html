@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Catálogo de bebidas do Café na Mão, com nome, descrição e preço."
+    />
+    <title>Menu | Café na Mão</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="pular-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="cabecalho">
+      <div class="container cabecalho__conteudo">
+        <a class="logo" href="index.html">
+          <span class="logo__selo" aria-hidden="true">C</span>
+          <span>Café na Mão</span>
+        </a>
+
+        <nav class="menu" aria-label="Navegação principal">
+          <a class="menu__link" href="index.html">Início</a>
+          <a class="menu__link menu__link--ativo" href="menu.html" aria-current="page">Menu</a>
+          <a class="menu__link" href="pedidos.html">Pedidos</a>
+          <a class="menu__link" href="sobre.html">Sobre</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <section class="catalogo container" aria-labelledby="titulo-catalogo">
+        <div class="catalogo__cabecalho">
+          <div>
+            <p class="selo">Escolha a sua</p>
+            <h1 id="titulo-catalogo">Nosso menu</h1>
+          </div>
+          <p class="catalogo__intro">
+            Bebidas preparadas na hora. Preços em reais e pagamento simulado nesta
+            versão acadêmica.
+          </p>
+        </div>
+
+        <p id="status-catalogo" class="visualmente-oculto" role="status" aria-live="polite"></p>
+
+        <div id="estado-catalogo" class="estado" hidden>
+          <p id="mensagem-estado" class="estado__mensagem"></p>
+          <div id="acao-estado" class="estado__acao"></div>
+        </div>
+
+        <div id="lista-bebidas" class="catalogo__grade" aria-busy="true"></div>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <div class="container rodape__conteudo">
+        <p><strong>Café na Mão</strong> — projeto acadêmico de pedidos de bebidas.</p>
+        <p>Pagamento simulado. Nenhum dado real de cartão é coletado.</p>
+      </div>
+    </footer>
+
+    <script src="js/dados.js" defer></script>
+    <script src="js/menu.js" defer></script>
+  </body>
+</html>
