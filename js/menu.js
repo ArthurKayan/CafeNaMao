@@ -1,6 +1,6 @@
-(function () {
+(async function () {
   "use strict";
-
+ await window.CafeNaMaoPronto;
   const dados = window.CafeNaMaoDados;
   const detalhes = window.CafeNaMaoDetalhes;
   const lista = document.getElementById("lista-bebidas");
@@ -260,7 +260,7 @@
         return;
       }
 
-      const bebidas = estadoDaCarga === "vazio" ? [] : dados.bebidas;
+      const bebidas = estadoDaCarga === "vazio" ? [] : dados.buscarBebidas();
 
       if (bebidas.length === 0) {
         mostrarVazio();
