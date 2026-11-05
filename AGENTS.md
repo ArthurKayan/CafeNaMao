@@ -27,9 +27,12 @@ git diff --check                      # whitespace
 ## Arquitetura e convenções
 
 - `js/dados.js` — catálogo (`bebidas`) + `formatarPreco`; expõe `window.CafeNaMaoDados` e também `module.exports` para os testes Node.
+- `js/detalhes.js` — validação de quantidade e cálculo do total parcial.
+- `js/carrinho.js` — regras do carrinho (adicionar, alterar, remover, total, pedido) e persistência em `localStorage`; expõe `window.CafeNaMaoCarrinho` e `module.exports`.
 - `js/menu.js` — renderização e estados do catálogo (`menu.html`); usa apenas scripts clássicos (IIFE, `"use strict"`), **não** módulos ES.
-- `tests/dados.test.js` — testes com `node:test` + `node:assert/strict`.
-- Páginas: `index.html` (pronta), `menu.html` (pronta), `pedidos.html` e `sobre.html` **vazias de propósito** (etapas futuras; não preencha antes da hora).
+- `js/pedidos.js` — carrinho visual, alteração de quantidade, remoção e confirmação em `pedidos.html`.
+- `tests/dados.test.js`, `tests/detalhes.test.js` e `tests/carrinho.test.js` — testes com `node:test` + `node:assert/strict`.
+- Páginas: `index.html`, `menu.html` e `pedidos.html` prontas para as etapas concluídas; `sobre.html` **vazia de propósito** (etapa futura; não preencha antes da hora).
 - Preços são inteiros em **centavos**; arredondamentos/`float` são proibidos. Formate com `formatarPreco` (`Intl.NumberFormat("pt-BR")`).
 - Insira dados de domínio no DOM com `textContent`/`createElement`, nunca interpolando em `innerHTML`.
 - Nomes de domínio em português. HTML semântico, sem estilos inline, sem `href="#"`.

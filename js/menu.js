@@ -3,8 +3,11 @@
 
   const dados = window.CafeNaMaoDados;
   const detalhes = window.CafeNaMaoDetalhes;
+  const carrinho = window.CafeNaMaoCarrinho;
   const lista = document.getElementById("lista-bebidas");
   const status = document.getElementById("status-catalogo");
+  const resumoCarrinho = document.getElementById("resumo-carrinho");
+  const resumoCarrinhoTexto = document.getElementById("resumo-carrinho-texto");
   const estado = document.getElementById("estado-catalogo");
   const mensagem = document.getElementById("mensagem-estado");
   const acao = document.getElementById("acao-estado");
@@ -16,6 +19,7 @@
   const detalhesTotal = document.getElementById("detalhes-total");
   const detalhesQuantidade = document.getElementById("detalhes-quantidade");
   const detalhesErro = document.getElementById("detalhes-erro");
+  const detalhesAdicionar = document.getElementById("detalhes-adicionar");
   const detalhesFechar = document.getElementById("detalhes-fechar");
 
   if (
@@ -25,6 +29,9 @@
     !mensagem ||
     !acao ||
     !detalhes ||
+    !carrinho ||
+    !resumoCarrinho ||
+    !resumoCarrinhoTexto ||
     !painelDetalhes ||
     !detalhesCategoria ||
     !detalhesTitulo ||
@@ -33,6 +40,7 @@
     !detalhesTotal ||
     !detalhesQuantidade ||
     !detalhesErro ||
+    !detalhesAdicionar ||
     !detalhesFechar
   ) {
     return;
@@ -93,6 +101,53 @@
     );
   }
 
+  function atualizarResumoCarrinho() {
+    const carrinhoAtual = carrinho.carregarCarrinho();
+    const totalItens = carrinho.contarItens(carrinhoAtual);
+
+    if (totalItens === 0) {
+      resumoCarrinho.hidden = true;
+      resumoCarrinhoTexto.textContent = "";
+      return;
+    }
+
+    resumoCarrinhoTexto.textContent =
+      totalItens +
+      (totalItens === 1 ? " item · " : " itens · ") +
+      dados.formatarPreco(carrinho.calcularTotalCarrinho(carrinhoAtual));
+    resumoCarrinho.hidden = false;
+  }
+
+  function adicionarAoCarrinho() {
+    if (!bebidaAtual) {
+      return;
+    }
+
+    const quantidade = Number(detalhesQuantidade.value);
+    const erro = detalhes.validarQuantidade(quantidade);
+
+    if (erro) {
+      detalhesErro.textContent = erro;
+      detalhesQuantidade.setAttribute("aria-invalid", "true");
+      return;
+    }
+
+    try {
+      const carrinhoAtual = carrinho.carregarCarrinho();
+      carrinho.adicionarItem(carrinhoAtual, bebidaAtual, quantidade);
+      carrinho.salvarCarrinho(carrinhoAtual);
+    } catch (erroCarrinho) {
+      detalhesErro.textContent = erroCarrinho.message;
+      detalhesQuantidade.setAttribute("aria-invalid", "true");
+      return;
+    }
+
+    const nomeAdicionado = bebidaAtual.nome;
+    atualizarResumoCarrinho();
+    fecharDetalhes();
+    anunciar(nomeAdicionado + " adicionado ao pedido.");
+  }
+
   function abrirDetalhes(bebida, botao) {
     bebidaAtual = bebida;
     botaoQueAbriu = botao;
@@ -136,7 +191,15 @@
   });
 
   detalhesFechar.addEventListener("click", fecharDetalhes);
+  detalhesAdicionar.addEventListener("click", adicionarAoCarrinho);
   detalhesQuantidade.addEventListener("input", atualizarTotalDetalhes);
+
+  window.addEventListener("pageshow", atualizarResumoCarrinho);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      atualizarResumoCarrinho();
+    }
+  });
 
   function criarCardBebida(bebida, indice) {
     const article = document.createElement("article");
@@ -271,5 +334,6 @@
     }, 450);
   }
 
+  atualizarResumoCarrinho();
   carregarCatalogo();
 })();

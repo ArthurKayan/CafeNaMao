@@ -44,6 +44,15 @@
 
         <p id="status-catalogo" class="visualmente-oculto" role="status" aria-live="polite"></p>
 
+        <div id="resumo-carrinho" class="resumo-carrinho" hidden>
+          <p class="resumo-carrinho__texto">
+            Seu pedido: <strong id="resumo-carrinho-texto"></strong>
+          </p>
+          <a class="botao botao--primario resumo-carrinho__link" href="pedidos.html">
+            Ver pedido
+          </a>
+        </div>
+
         <div id="estado-catalogo" class="estado" hidden>
           <p id="mensagem-estado" class="estado__mensagem"></p>
           <div id="acao-estado" class="estado__acao"></div>
@@ -96,14 +105,20 @@
           <p id="detalhes-erro" class="detalhes__erro" role="alert"></p>
         </div>
 
-        <button type="button" id="detalhes-fechar" class="botao botao--primario detalhes__fechar">
-          Fechar
-        </button>
+        <div class="detalhes__acoes">
+          <button type="button" id="detalhes-adicionar" class="botao botao--primario">
+            Adicionar ao pedido
+          </button>
+          <button type="button" id="detalhes-fechar" class="botao botao--secundario">
+            Fechar
+          </button>
+        </div>
       </div>
     </dialog>
 
     <script src="js/dados.js" defer></script>
     <script src="js/detalhes.js" defer></script>
+    <script src="js/carrinho.js" defer></script>
     <script src="js/menu.js" defer></script>
   </body>
 </html>
