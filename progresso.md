@@ -311,16 +311,25 @@ Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewp
 | Remover item | Total recalculado para `R$ 20,00` e uma linha restante |
 | Concluir pedido | Confirmação visível, número `PED-…`, total `R$ 20,00` e foco na confirmação |
 | Após concluir | Carrinho salvo limpo; recarregar mostra “Seu carrinho está vazio.” |
+| Concluir sem pagamento | Bloqueia e mantém o carrinho visível |
+| Concluir com quantidade 11 | Bloqueia a conclusão e move o foco para o campo |
+| Concluir com pagamento escolhido | Confirmação exibida e pedido salvo no histórico |
+| Após recarregar com histórico | Pedido persiste e carrinho fica vazio |
+| Alterar status | Persiste no histórico e atualiza o cartão |
+| Cancelar limpeza | Diálogo fecha sem apagar o histórico |
+| Limpar histórico | Diálogo confirma, remove o storage e exibe histórico vazio |
 | Teclado | `Esc` fecha o painel e devolve o foco ao botão de origem |
 | Console | Nenhum erro de JavaScript durante o fluxo |
 | Confirmação em 390/1366 px | Sem rolagem horizontal |
+| Histórico em 390/768/1366 px | Sem rolagem horizontal |
 
 ## 11. Pendências e limitações conhecidas
 
 - A verificação automatizada foi feita no Edge headless; uma conferência visual rápida no navegador real ainda é recomendada antes da apresentação.
 - `sobre.html` continua vazio.
-- Não há histórico de pedidos nem pagamento simulado; o pedido é apenas confirmado e o carrinho é limpo.
-- O carrinho depende de `localStorage` para atravessar páginas; em navegadores que bloqueiam armazenamento para `file://`, a navegação entre menu e pedidos pode perder o carrinho.
+- O histórico e o carrinho ficam apenas no `localStorage` do navegador; não há sincronização entre dispositivos nem backend.
+- O status do pedido é alterado manualmente no UI e não evolui automaticamente.
+- O carrinho e o histórico dependem de `localStorage`; em navegadores que bloqueiam o armazenamento para `file://`, a navegação entre menu e pedidos pode perder o carrinho.
 - Não há backend Java, API REST, banco de dados ou Docker Compose.
 - Não há plano de teste formal com 15 casos, coleção Postman/Newman, JUnit 5, JaCoCo ou GitHub Actions. Esses itens pertencem à Etapa 9.
 - Não há testes automatizados de DOM no repositório; a verificação de interface foi feita manualmente com apoio de scripts temporários no Edge.
@@ -332,32 +341,31 @@ Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewp
 
 Status: aguardando autorização do usuário. Não iniciar sem pedido explícito.
 
-Objetivo sugerido: simular a etapa de pagamento e permitir consultar os pedidos já confirmados, sem coletar dados reais de cartão e sem backend.
+Objetivo sugerido: consolidar a documentação do estado atual e preparar a arquitetura para a evolução para backend/API, sem implementar novas funcionalidades.
 
 Tarefas previstas (a confirmar):
 
-1. Definir um fluxo simples de pagamento simulado (por exemplo, escolha entre “dinheiro” e “cartão fictício”).
-2. Salvar o pedido confirmado em `localStorage` como histórico, com número, data, itens e total.
-3. Exibir o histórico em `pedidos.html` ou em uma seção própria, com estado vazio.
-4. Manter preços em centavos, reutilizando `formatarPreco`.
-5. Garantir acessibilidade, `aria-live` e responsividade sem rolagem horizontal.
-6. Criar testes unitários para o armazenamento e a leitura do histórico.
-7. Fazer a verificação completa no navegador antes de considerar a etapa concluída.
+1. Preencher `sobre.html` com a proposta, limitações e visão do projeto.
+2. Atualizar `README.md` com descrição, funcionalidades implementadas, comandos de teste, como executar localmente e limitações atuais.
+3. Criar `docs/requisitos.md` com requisitos funcionais e não funcionais e vínculo com casos de teste.
+4. Criar `docs/relatorio-testes.md` com estratégia, resultados, evidências e próximos passos de automação.
+5. Registrar `docs/plano-de-testes.md` com o plano completo e os casos `CT01` a `CT26`.
+6. Revisar a documentação gerada pela etapa e manter os IDs e rastreabilidade consistentes.
 
 Critérios de conclusão sugeridos:
 
-- pedido confirmado continua visível após recarregar a página;
-- histórico vazio exibe mensagem clara;
-- nenhum dado real de cartão é solicitado, exibido ou armazenado;
-- testes automatizados e verificação no navegador são registrados neste arquivo.
+- `sobre.html`, `README.md` e requisitos estão documentados sem inventar funcionalidades futuras;
+- plano de testes, relatório inicial e requisitos estão rastreáveis;
+- o comportamento atual da Etapa 5 permanece coberto por 53 testes e verificação no navegador;
+- backend/API, banco e CI continuam fora do escopo sem autorização.
 
 ## 13. Checklist para a próxima sessão
 
 - [ ] Ler a skill e este arquivo.
 - [ ] Rodar `npm test` antes de começar.
-- [ ] Confirmar com o usuário o escopo da Etapa 5.
+- [ ] Confirmar com o usuário o escopo da Etapa 6.
 - [ ] Implementar somente a etapa autorizada.
 - [ ] Executar testes unitários e verificação no navegador.
-- [ ] Revisar o diff e procurar regressões nas Etapas 1 a 4.
+- [ ] Revisar o diff e procurar regressões nas Etapas 1 a 5.
 - [ ] Atualizar `progresso.md` com resultados e nova próxima etapa.
 - [ ] Não fazer commit ou push sem solicitação explícita do usuário.
