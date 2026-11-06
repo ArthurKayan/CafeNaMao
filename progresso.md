@@ -1,8 +1,8 @@
 # PROGRESSO — Café na Mão
 
-Última atualização: 05/11/2026
+Última atualização: 06/11/2026
 
-Status atual: **Etapas 1, 2, 3 e 4 concluídas. Próxima etapa: Etapa 5 — Pagamento simulado e histórico de pedidos (aguardando autorização).**
+Status atual: **Etapas 1, 2, 3, 4 e 5 concluídas. Próxima etapa: Etapa 6 — Documentação e preparação da API (aguardando autorização).**
 
 Este arquivo registra o estado real do projeto, as decisões tomadas, os testes executados e o próximo passo. Uma nova sessão deve conseguir continuar a partir dele, lendo também `projeto 1/.agents/skills/cafenamao/SKILL.md`.
 
@@ -16,7 +16,7 @@ O registro anterior (commit `c359b67`) foi preservado e ampliado. Ele documentav
 - ferramentas usadas: VS Code, OpenCode, DeepSeek v4.1 Flash, HTML, CSS, JavaScript, Git e GitHub;
 - orientação para trabalhar em etapas, explicar em português, testar e não avançar sem autorização.
 
-Essas orientações continuam válidas. O estado detalhado das Etapas 1, 2 e 3 está nas seções seguintes.
+Essas orientações continuam válidas. O estado detalhado das Etapas 1 a 5 está nas seções seguintes.
 
 ## 1. Como retomar o projeto
 
@@ -35,7 +35,7 @@ start index.html
 start menu.html
 ```
 
-5. Implemente somente a próxima etapa descrita na seção 11.
+5. Implemente somente a próxima etapa descrita na seção 12.
 6. Ao final, atualize este arquivo com resultados, pendências e a nova próxima etapa.
 
 Não é necessário servidor local nesta fase. Os scripts usam arquivos JavaScript clássicos, portanto funcionam também por `file://`.
@@ -64,19 +64,21 @@ Identidade visual:
 CaféNaMão/
 ├── index.html                 Página inicial
 ├── menu.html                  Catálogo de bebidas e painel de detalhes
-├── pedidos.html               Carrinho, resumo e confirmação do pedido
+├── pedidos.html               Carrinho, pagamento, confirmação e histórico
 ├── sobre.html                 Vazio; será trabalhado em etapa futura
 ├── style.css                  Estilos globais e responsivos
 ├── js/
 │   ├── dados.js               Dados das bebidas e formatação de preço
 │   ├── detalhes.js            Validação de quantidade e cálculo do total
 │   ├── carrinho.js            Regras do carrinho, total e persistência
+│   ├── historico.js           Histórico, pagamento simulado e status
 │   ├── menu.js                Renderização, estados e painel de detalhes
-│   └── pedidos.js             Carrinho na tela, remoção e confirmação
+│   └── pedidos.js             Carrinho na tela, pagamento e histórico
 ├── tests/
 │   ├── dados.test.js          Testes unitários dos dados
 │   ├── detalhes.test.js       Testes de quantidade e total
-│   └── carrinho.test.js       Testes do carrinho e criação de pedido
+│   ├── carrinho.test.js       Testes do carrinho e criação de pedido
+│   └── historico.test.js      Testes do histórico, pagamento e status
 ├── package.json               Script de testes; sem dependências
 ├── README.md                  Descrição inicial, ainda resumida
 ├── progresso.md               Este registro
@@ -175,7 +177,28 @@ Implementado:
 
 Arquivos: `menu.html`, `pedidos.html`, `style.css`, `js/carrinho.js`, `js/menu.js`, `js/pedidos.js`, `tests/carrinho.test.js`.
 
-## 8. Decisões técnicas registradas
+## 8. Etapa 5 — Pagamento simulado e histórico de pedidos
+
+Status: concluída.
+
+Implementado:
+
+- Escolha obrigatória entre “Dinheiro” e “Cartão fictício”, sem solicitar ou armazenar dados reais de cartão.
+- Bloqueio da conclusão quando nenhuma forma de pagamento foi escolhida ou quando há quantidade inválida, com mensagem e foco no campo problemático.
+- `js/historico.js` como módulo clássico compartilhado pelo navegador e pelos testes Node.
+- Histórico persistido em `localStorage` na chave `cafe-na-mao:historico:v1`, com fallback silencioso quando o armazenamento não estiver disponível.
+- Registro com número, data, itens, total, forma de pagamento e status.
+- Histórico exibido em `pedidos.html`, com o pedido mais recente primeiro e estado vazio.
+- Alteração de status entre “Recebido”, “Em preparo” e “Finalizado”, com persistência imediata.
+- Limpeza do histórico em diálogo de confirmação, sem remover o carrinho atual.
+- O carrinho só é limpo depois que o pedido foi salvo no histórico; se a gravação falhar, o carrinho é mantido.
+- Pagamento e status aparecem na confirmação do pedido e nos cards do histórico.
+- Mensagens por `aria-live`, rótulos associados aos campos e foco devolvido ao título após limpar o histórico.
+- Testes unitários em `tests/historico.test.js`.
+
+Arquivos: `pedidos.html`, `style.css`, `js/historico.js`, `js/pedidos.js`, `tests/historico.test.js`.
+
+## 9. Decisões técnicas registradas
 
 1. HTML, CSS e JavaScript puro nesta fase para reduzir complexidade e facilitar a explicação na apresentação.
 2. Scripts clássicos com padrão de proteção e namespace global (`window.CafeNaMaoDados`) em vez de módulos ES. Isso permite abrir o projeto por `file://` sem servidor local.
@@ -192,21 +215,26 @@ Arquivos: `menu.html`, `pedidos.html`, `style.css`, `js/carrinho.js`, `js/menu.j
 13. O carrinho guarda uma cópia do nome e do preço unitário no momento da adição, para que o resumo não dependa de mudanças futuras no catálogo.
 14. A quantidade máxima de 10 vale por bebida no carrinho. Tentar ultrapassar esse limite somando adições repetidas exibe a mensagem de validação e não altera o item.
 15. O carrinho é salvo em `localStorage` para sobreviver à navegação entre `menu.html` e `pedidos.html`; se o navegador bloquear o armazenamento, a página continua funcionando durante a sessão.
-16. A conclusão do pedido cria um objeto com número, data, cópia dos itens e total, limpa o carrinho salvo e exibe a confirmação na mesma página. Não há pagamento real nem envio ao backend.
+16. A conclusão do pedido cria um objeto com número, data, cópia dos itens, total, pagamento e status. O pedido é salvo no histórico antes de o carrinho ser limpo. Não há pagamento real nem envio ao backend.
+17. A forma de pagamento é obrigatória e limitada a “dinheiro” ou “cartão fictício”. Nenhum número, validade ou código de cartão é solicitado ou armazenado.
+18. Se o histórico não puder ser salvo, a confirmação não avança e o carrinho é mantido, evitando perda silenciosa do pedido.
+19. O histórico valida os campos e recalcula o total a partir dos itens; registros corrompidos, com status/pagamento desconhecido ou total divergente são ignorados.
+20. O status é alterado manualmente entre “Recebido”, “Em preparo” e “Finalizado”; não há progressão automática.
+21. O histórico e o carrinho ficam apenas no `localStorage` do navegador. Não há conta de usuário, sincronização entre dispositivos ou backend.
 
-## 9. Verificações executadas
+## 10. Verificações executadas
 
 ### Testes automatizados
 
 Comando:
 
 ```powershell
-npm.cmd test
+npm test
 ```
 
-O `npm.ps1` está bloqueado pela política de execução deste ambiente, por isso foi usada a versão `.cmd`; o script executado é o mesmo (`node --test`).
+O comando executa `node --test`. Em sessões anteriores, quando o `npm.ps1` estava bloqueado, foi usada a versão `npm.cmd`.
 
-Resultado: **34 testes aprovados, 0 reprovados, 0 ignorados**.
+Resultado: **53 testes aprovados, 0 reprovados, 0 ignorados** (19 novos testes de histórico).
 
 Cobertura atual dos testes:
 
@@ -229,7 +257,16 @@ Cobertura atual dos testes:
 - bloqueio de pedido com carrinho vazio;
 - criação de pedido com número, data, cópia dos itens e total;
 - rejeição de quantidade inválida e de soma acima do limite;
-- persistência do carrinho em armazenamento simulado.
+- persistência do carrinho em armazenamento simulado;
+- criação de registro com pagamento e status inicial;
+- rejeição de pagamento, status, itens e total inválidos no histórico;
+- leitura de histórico vazio, ausente ou com JSON inválido;
+- gravação, ordenação do mais recente e substituição de número repetido;
+- alteração de status existente e rejeição de status/pedido inválido;
+- filtragem de registros corrompidos e números duplicados;
+- limpeza do histórico;
+- comportamento com armazenamento indisponível;
+- rótulos em português para status e pagamento.
 
 Também foram executados:
 
@@ -237,19 +274,23 @@ Também foram executados:
 node --check js/dados.js
 node --check js/detalhes.js
 node --check js/carrinho.js
+node --check js/historico.js
 node --check js/menu.js
 node --check js/pedidos.js
 node --check tests/dados.test.js
 node --check tests/detalhes.test.js
 node --check tests/carrinho.test.js
+node --check tests/historico.test.js
 ```
 
 Resultado: sem erros de sintaxe.
 
 Foi executada também uma verificação estática complementar:
 
-- todos os IDs usados por `getElementById` em `js/menu.js` e `js/pedidos.js` existem nas respectivas páginas;
+- todos os IDs usados por `getElementById` em `js/menu.js` e `js/pedidos.js` existem nas respectivas páginas, inclusive os do pagamento e do histórico;
 - não há IDs duplicados em `index.html`, `menu.html`, `pedidos.html` ou `sobre.html`;
+- as referências de `aria-labelledby` e `aria-describedby` apontam para IDs existentes;
+- `js/historico.js` é carregado depois de `js/carrinho.js` e antes de `js/pedidos.js`;
 - não há `href="#"` nem estilos inline;
 - todos os links internos apontam para arquivos existentes.
 
@@ -274,7 +315,7 @@ Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewp
 | Console | Nenhum erro de JavaScript durante o fluxo |
 | Confirmação em 390/1366 px | Sem rolagem horizontal |
 
-## 10. Pendências e limitações conhecidas
+## 11. Pendências e limitações conhecidas
 
 - A verificação automatizada foi feita no Edge headless; uma conferência visual rápida no navegador real ainda é recomendada antes da apresentação.
 - `sobre.html` continua vazio.
@@ -287,7 +328,7 @@ Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewp
 - Não existe arquivo de logo; a marca é textual.
 - Nenhum dado real de cartão pode ser coletado ou armazenado.
 
-## 11. Próxima etapa — Etapa 5: pagamento simulado e histórico de pedidos
+## 12. Próxima etapa — Etapa 6: documentação e preparação da API
 
 Status: aguardando autorização do usuário. Não iniciar sem pedido explícito.
 
@@ -310,7 +351,7 @@ Critérios de conclusão sugeridos:
 - nenhum dado real de cartão é solicitado, exibido ou armazenado;
 - testes automatizados e verificação no navegador são registrados neste arquivo.
 
-## 12. Checklist para a próxima sessão
+## 13. Checklist para a próxima sessão
 
 - [ ] Ler a skill e este arquivo.
 - [ ] Rodar `npm test` antes de começar.

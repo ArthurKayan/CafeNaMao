@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Revise o carrinho do Café na Mão, ajuste as quantidades e conclua um pedido simulado."
+      content="Revise o carrinho do Café na Mão, escolha a forma de pagamento simulada e consulte o histórico de pedidos."
     />
     <title>Pedidos | Café na Mão</title>
     <link rel="stylesheet" href="style.css" />
@@ -55,7 +55,7 @@
           <ul id="lista-carrinho" class="carrinho__lista"></ul>
 
           <div class="carrinho__resumo">
-            <div>
+            <div class="carrinho__resumo-info">
               <p class="carrinho__rotulo">Total geral</p>
               <p id="total-carrinho" class="carrinho__total" aria-live="polite"></p>
               <p class="carrinho__aviso">
@@ -63,6 +63,29 @@
                 cartão é coletado.
               </p>
             </div>
+
+            <fieldset
+              id="pagamento-pedido"
+              class="pagamento"
+              aria-required="true"
+              aria-describedby="pagamento-ajuda erro-pagamento"
+            >
+              <legend class="carrinho__rotulo">Forma de pagamento</legend>
+              <p id="pagamento-ajuda" class="pagamento__ajuda">
+                Escolha uma opção simulada para concluir o pedido.
+              </p>
+              <div class="pagamento__opcoes">
+                <label class="pagamento__opcao">
+                  <input type="radio" name="pagamento" value="dinheiro" />
+                  <span>Dinheiro</span>
+                </label>
+                <label class="pagamento__opcao">
+                  <input type="radio" name="pagamento" value="cartao-ficticio" />
+                  <span>Cartão fictício</span>
+                </label>
+              </div>
+              <p id="erro-pagamento" class="carrinho__erro" role="alert"></p>
+            </fieldset>
 
             <div class="carrinho__acoes">
               <button type="button" id="concluir-pedido" class="botao botao--primario">
@@ -84,6 +107,8 @@
           <h2 id="titulo-confirmacao">Tudo certo, seu café está a caminho!</h2>
           <p id="pedido-detalhe" class="confirmacao__detalhe"></p>
           <p id="pedido-data" class="confirmacao__data"></p>
+          <p id="pedido-pagamento" class="confirmacao__detalhe"></p>
+          <p id="pedido-status" class="confirmacao__status"></p>
 
           <ul id="pedido-itens" class="confirmacao__lista"></ul>
 
@@ -93,8 +118,66 @@
 
           <a class="botao botao--primario" href="menu.html">Fazer novo pedido</a>
         </section>
+
+        <section class="historico" aria-labelledby="titulo-historico">
+          <div class="historico__cabecalho">
+            <div>
+              <p class="selo">Seus registros</p>
+              <h2 id="titulo-historico" tabindex="-1">Histórico de pedidos</h2>
+            </div>
+
+            <button
+              type="button"
+              id="limpar-historico"
+              class="botao botao--secundario"
+              hidden
+            >
+              Limpar histórico
+            </button>
+          </div>
+
+          <p
+            id="status-historico"
+            class="visualmente-oculto"
+            role="status"
+            aria-live="polite"
+          ></p>
+
+          <div id="historico-vazio" class="estado" hidden>
+            <p class="estado__mensagem">
+              Nenhum pedido no histórico. Seus pedidos confirmados aparecerão aqui.
+            </p>
+            <div class="estado__acao">
+              <a class="botao botao--primario" href="menu.html">Fazer um pedido</a>
+            </div>
+          </div>
+
+          <ul id="lista-historico" class="historico__lista"></ul>
+        </section>
       </section>
     </main>
+
+    <dialog
+      id="dialogo-limpar-historico"
+      class="dialogo"
+      aria-labelledby="titulo-limpar-historico"
+    >
+      <div class="dialogo__conteudo">
+        <h2 id="titulo-limpar-historico">Limpar histórico?</h2>
+        <p>
+          Os pedidos salvos neste navegador serão removidos. Essa ação não pode
+          ser desfeita.
+        </p>
+        <div class="dialogo__acoes">
+          <button type="button" id="cancelar-limpeza" class="botao botao--secundario">
+            Cancelar
+          </button>
+          <button type="button" id="confirmar-limpeza" class="botao botao--perigo">
+            Limpar tudo
+          </button>
+        </div>
+      </div>
+    </dialog>
 
     <footer class="rodape">
       <div class="container rodape__conteudo">
@@ -106,6 +189,7 @@
     <script src="js/dados.js" defer></script>
     <script src="js/detalhes.js" defer></script>
     <script src="js/carrinho.js" defer></script>
+    <script src="js/historico.js" defer></script>
     <script src="js/pedidos.js" defer></script>
   </body>
 </html>
