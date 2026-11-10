@@ -1,8 +1,8 @@
 # PROGRESSO — Café na Mão
 
-Última atualização: 06/11/2026
+Última atualização: 10/11/2026
 
-Status atual: **Etapas 1, 2, 3, 4 e 5 concluídas. Próxima etapa: Etapa 6 — Documentação e preparação da API (aguardando autorização).**
+Status atual: **Etapas 1 a 6 concluídas. Próxima etapa: Etapa 7 — Backend, API REST e testes de integração (aguardando autorização).**
 
 Este arquivo registra o estado real do projeto, as decisões tomadas, os testes executados e o próximo passo. Uma nova sessão deve conseguir continuar a partir dele, lendo também `projeto 1/.agents/skills/cafenamao/SKILL.md`.
 
@@ -16,7 +16,7 @@ O registro anterior (commit `c359b67`) foi preservado e ampliado. Ele documentav
 - ferramentas usadas: VS Code, OpenCode, DeepSeek v4.1 Flash, HTML, CSS, JavaScript, Git e GitHub;
 - orientação para trabalhar em etapas, explicar em português, testar e não avançar sem autorização.
 
-Essas orientações continuam válidas. O estado detalhado das Etapas 1 a 5 está nas seções seguintes.
+Essas orientações continuam válidas. O estado detalhado das Etapas 1 a 6 está nas seções seguintes.
 
 ## 1. Como retomar o projeto
 
@@ -35,7 +35,7 @@ start index.html
 start menu.html
 ```
 
-5. Implemente somente a próxima etapa descrita na seção 12.
+5. Implemente somente a próxima etapa descrita na seção 13.
 6. Ao final, atualize este arquivo com resultados, pendências e a nova próxima etapa.
 
 Não é necessário servidor local nesta fase. Os scripts usam arquivos JavaScript clássicos, portanto funcionam também por `file://`.
@@ -65,7 +65,7 @@ CaféNaMão/
 ├── index.html                 Página inicial
 ├── menu.html                  Catálogo de bebidas e painel de detalhes
 ├── pedidos.html               Carrinho, pagamento, confirmação e histórico
-├── sobre.html                 Vazio; será trabalhado em etapa futura
+├── sobre.html                 Página Sobre o projeto
 ├── style.css                  Estilos globais e responsivos
 ├── js/
 │   ├── dados.js               Dados das bebidas e formatação de preço
@@ -79,8 +79,12 @@ CaféNaMão/
 │   ├── detalhes.test.js       Testes de quantidade e total
 │   ├── carrinho.test.js       Testes do carrinho e criação de pedido
 │   └── historico.test.js      Testes do histórico, pagamento e status
+├── docs/
+│   ├── requisitos.md          Requisitos funcionais e não funcionais
+│   ├── plano-de-testes.md     Plano e casos CT01 a CT26
+│   └── relatorio-testes.md    Resultados, evidências e limitações
 ├── package.json               Script de testes; sem dependências
-├── README.md                  Descrição inicial, ainda resumida
+├── README.md                  Documentação principal do projeto
 ├── progresso.md               Este registro
 └── projeto 1/                 Skills e configurações de agentes
 ```
@@ -94,6 +98,7 @@ Implementado:
 - `index.html` com `lang="pt-BR"`, viewport mobile, título e descrição.
 - Estrutura semântica com `header`, `nav`, `main`, `section` e `footer`.
 - Link “Pular para o conteúdo” e navegação com `aria-current="page"`.
+
 - Página inicial com hero, chamada para o menu, seção “Como funciona” e rodapé.
 - Ilustração de xícara feita somente com CSS.
 - Cabeçalho fixo no desktop e estático em telas menores.
@@ -198,7 +203,30 @@ Implementado:
 
 Arquivos: `pedidos.html`, `style.css`, `js/historico.js`, `js/pedidos.js`, `tests/historico.test.js`.
 
-## 9. Decisões técnicas registradas
+## 9. Etapa 6 — Documentação, página Sobre e planejamento de testes
+
+Status: concluída.
+
+Implementado:
+
+- `sobre.html` preenchida com a proposta, o fluxo atual, o pagamento simulado, o
+  escopo implementado, o que está fora do escopo e os próximos passos.
+- Estilos específicos da página Sobre em `style.css`, reutilizando a identidade
+  neobrutalista e o layout responsivo.
+- `README.md` reescrito com descrição, funcionalidades, stack, estrutura, execução,
+  testes, documentação, acessibilidade, limitações, uso de IA e próximos passos.
+- `docs/requisitos.md` com `RF01` a `RF15`, `RNF01` a `RNF10`, critérios de
+  aceitação e rastreabilidade para os casos de teste.
+- `docs/plano-de-testes.md` com escopo, estratégia, ambientes, dados, riscos,
+  critérios de entrada/saída e casos `CT01` a `CT26`.
+- `docs/relatorio-testes.md` com os resultados reais da suíte, verificações
+  estáticas, evidências do navegador, situação dos 26 casos e lacunas conhecidas.
+- Links internos entre README, documentos, progresso e páginas verificados.
+
+Arquivos: `sobre.html`, `style.css`, `README.md`, `progresso.md`, `docs/requisitos.md`,
+`docs/plano-de-testes.md`, `docs/relatorio-testes.md`.
+
+## 10. Decisões técnicas registradas
 
 1. HTML, CSS e JavaScript puro nesta fase para reduzir complexidade e facilitar a explicação na apresentação.
 2. Scripts clássicos com padrão de proteção e namespace global (`window.CafeNaMaoDados`) em vez de módulos ES. Isso permite abrir o projeto por `file://` sem servidor local.
@@ -221,8 +249,12 @@ Arquivos: `pedidos.html`, `style.css`, `js/historico.js`, `js/pedidos.js`, `test
 19. O histórico valida os campos e recalcula o total a partir dos itens; registros corrompidos, com status/pagamento desconhecido ou total divergente são ignorados.
 20. O status é alterado manualmente entre “Recebido”, “Em preparo” e “Finalizado”; não há progressão automática.
 21. O histórico e o carrinho ficam apenas no `localStorage` do navegador. Não há conta de usuário, sincronização entre dispositivos ou backend.
+22. A Etapa 6 documenta somente o que está implementado. Backend, API, banco, Docker, CI e pagamento real aparecem como escopo futuro, sem simular funcionalidades inexistentes.
+23. Requisitos, plano, relatório e README usam links relativos e IDs estáveis (`RF`, `RNF` e `CT`) para manter a rastreabilidade dentro do repositório.
+24. O relatório registra evidências reais e limitações: 53 testes automatizados, verificações estáticas e roteiros manuais no Edge em 390, 768 e 1366 px.
+25. A página Sobre reutiliza os componentes visuais existentes e não adiciona novas funcionalidades ao fluxo de pedidos.
 
-## 10. Verificações executadas
+## 11. Verificações executadas
 
 ### Testes automatizados
 
@@ -323,49 +355,75 @@ Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewp
 | Confirmação em 390/1366 px | Sem rolagem horizontal |
 | Histórico em 390/768/1366 px | Sem rolagem horizontal |
 
-## 11. Pendências e limitações conhecidas
+### Verificação da Etapa 6
 
-- A verificação automatizada foi feita no Edge headless; uma conferência visual rápida no navegador real ainda é recomendada antes da apresentação.
-- `sobre.html` continua vazio.
-- O histórico e o carrinho ficam apenas no `localStorage` do navegador; não há sincronização entre dispositivos nem backend.
-- O status do pedido é alterado manualmente no UI e não evolui automaticamente.
-- O carrinho e o histórico dependem de `localStorage`; em navegadores que bloqueiam o armazenamento para `file://`, a navegação entre menu e pedidos pode perder o carrinho.
-- Não há backend Java, API REST, banco de dados ou Docker Compose.
-- Não há plano de teste formal com 15 casos, coleção Postman/Newman, JUnit 5, JaCoCo ou GitHub Actions. Esses itens pertencem à Etapa 9.
-- Não há testes automatizados de DOM no repositório; a verificação de interface foi feita manualmente com apoio de scripts temporários no Edge.
-- O `README.md` ainda é resumido e deverá ser atualizado na etapa de documentação.
+- `index.html` e `sobre.html` abertos no Edge 156 headless via CDP.
+- Navegação principal abriu `menu.html`, `pedidos.html` e `sobre.html`; o link ativo
+  foi conferido em cada página.
+- A página Sobre exibiu três cards de contexto, três blocos de escopo, CTA e rodapé.
+- Larguras de 390, 768 e 1366 px sem rolagem horizontal.
+- Nenhum erro de JavaScript no console.
+- `CT16` confirmado: com falha simulada em `Storage.prototype.setItem`, a confirmação
+  não avançou, o carrinho foi preservado e nenhum pedido foi salvo.
+- Links internos de README, documentos e páginas verificados; `RF01`–`RF15`,
+  `RNF01`–`RNF10` e `CT01`–`CT26` presentes.
+- `docs/` agora contém requisitos, plano e relatório; o README aponta para os três.
+- Capturas temporárias da página Sobre em 1366 e 390 px foram inspecionadas e não
+  foram versionadas.
+
+## 12. Pendências e limitações conhecidas
+
+- A verificação foi feita no Edge headless; uma conferência visual rápida no
+  navegador real ainda é recomendada antes da apresentação.
+- O histórico e o carrinho ficam apenas no `localStorage` do navegador; não há
+  sincronização entre dispositivos nem backend.
+- O status do pedido é alterado manualmente na interface e não evolui
+  automaticamente.
+- O carrinho e o histórico dependem de `localStorage`; se o armazenamento for
+  bloqueado, a navegação entre menu e pedidos pode não persistir o carrinho.
+- Não há backend Java/Spring, API REST, banco de dados, Docker Compose ou CI.
+- Não há testes de API, JUnit 5, JaCoCo, Postman/Newman ou GitHub Actions. Esses
+  itens pertencem às próximas etapas e exigem autorização.
+- Não há testes automatizados de DOM no repositório; a interface foi verificada
+  manualmente com apoio de scripts temporários no Edge.
+- `docs/relatorio-testes.md` é um registro manual e precisa ser atualizado a cada
+  mudança relevante no código ou nos testes.
+- Riscos não bloqueantes no código: o evento `close` do `<dialog>` em `js/menu.js`
+  e `salvarCarrinho` sem retorno explícito de falha. Os fluxos testados continuam
+  funcionando; uma revisão pode ser feita em etapa própria.
 - Não existe arquivo de logo; a marca é textual.
 - Nenhum dado real de cartão pode ser coletado ou armazenado.
 
-## 12. Próxima etapa — Etapa 6: documentação e preparação da API
+## 13. Próxima etapa — Etapa 7: backend, API REST e testes de integração
 
 Status: aguardando autorização do usuário. Não iniciar sem pedido explícito.
 
-Objetivo sugerido: consolidar a documentação do estado atual e preparar a arquitetura para a evolução para backend/API, sem implementar novas funcionalidades.
+Objetivo sugerido: criar a base do backend Java/Spring Boot e expor os contratos da
+API sem alterar o comportamento validado do front-end.
 
 Tarefas previstas (a confirmar):
 
-1. Preencher `sobre.html` com a proposta, limitações e visão do projeto.
-2. Atualizar `README.md` com descrição, funcionalidades implementadas, comandos de teste, como executar localmente e limitações atuais.
-3. Criar `docs/requisitos.md` com requisitos funcionais e não funcionais e vínculo com casos de teste.
-4. Criar `docs/relatorio-testes.md` com estratégia, resultados, evidências e próximos passos de automação.
-5. Registrar `docs/plano-de-testes.md` com o plano completo e os casos `CT01` a `CT26`.
-6. Revisar a documentação gerada pela etapa e manter os IDs e rastreabilidade consistentes.
+1. Confirmar versões de Java, Spring Boot, Maven, banco e estratégia de execução.
+2. Modelar bebidas, carrinho e pedidos no backend, mantendo preços em centavos.
+3. Criar endpoints REST e validações equivalentes às regras atuais.
+4. Adicionar testes JUnit 5/MockMvc e coleção Postman/Newman.
+5. Integrar o front-end à API somente depois dos contratos estarem estáveis.
+6. Preservar a suíte atual com 53 testes e registrar a nova execução.
 
 Critérios de conclusão sugeridos:
 
-- `sobre.html`, `README.md` e requisitos estão documentados sem inventar funcionalidades futuras;
-- plano de testes, relatório inicial e requisitos estão rastreáveis;
-- o comportamento atual da Etapa 5 permanece coberto por 53 testes e verificação no navegador;
-- backend/API, banco e CI continuam fora do escopo sem autorização.
+- API implementada com contratos documentados e testes de integração aprovados;
+- regras de quantidade, total, pagamento e status mantidas sem divergência;
+- front-end atual continua funcionando e os 53 testes permanecem aprovados;
+- banco, Docker Compose, cobertura e CI avaliados conforme autorização da etapa.
 
-## 13. Checklist para a próxima sessão
+## 14. Checklist para a próxima sessão
 
 - [ ] Ler a skill e este arquivo.
 - [ ] Rodar `npm test` antes de começar.
-- [ ] Confirmar com o usuário o escopo da Etapa 6.
+- [ ] Confirmar com o usuário o escopo da Etapa 7.
 - [ ] Implementar somente a etapa autorizada.
-- [ ] Executar testes unitários e verificação no navegador.
-- [ ] Revisar o diff e procurar regressões nas Etapas 1 a 5.
-- [ ] Atualizar `progresso.md` com resultados e nova próxima etapa.
+- [ ] Executar testes unitários, testes de API e verificação no navegador.
+- [ ] Revisar o diff e procurar regressões nas Etapas 1 a 6.
+- [ ] Atualizar `docs/relatorio-testes.md` e `progresso.md` com os novos resultados.
 - [ ] Não fazer commit ou push sem solicitação explícita do usuário.

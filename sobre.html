@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Conheça o Café na Mão, projeto acadêmico de pedidos de bebidas com foco em experiência, qualidade e transparência."
+    />
+    <title>Sobre | Café na Mão</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <a class="pular-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="cabecalho">
+      <div class="container cabecalho__conteudo">
+        <a class="logo" href="index.html">
+          <span class="logo__selo" aria-hidden="true">C</span>
+          <span>Café na Mão</span>
+        </a>
+
+        <nav class="menu" aria-label="Navegação principal">
+          <a class="menu__link" href="index.html">Início</a>
+          <a class="menu__link" href="menu.html">Menu</a>
+          <a class="menu__link" href="pedidos.html">Pedidos</a>
+          <a class="menu__link menu__link--ativo" href="sobre.html" aria-current="page">
+            Sobre
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <section class="sobre container" aria-labelledby="titulo-sobre">
+        <p class="selo">Sobre o projeto</p>
+        <h1 id="titulo-sobre">Um café rápido, com qualidade em cada detalhe.</h1>
+        <p class="sobre__intro">
+          O Café na Mão é uma aplicação acadêmica de pedidos de bebidas. A proposta
+          é mostrar, de forma simples, como transformar a escolha de uma bebida em
+          um fluxo claro de catálogo, carrinho, pagamento simulado e acompanhamento
+          do pedido.
+        </p>
+
+        <div class="sobre__grade">
+          <article class="sobre__cartao">
+            <h2>Experiência do cliente</h2>
+            <p>
+              O catálogo apresenta bebidas, descrições e preços em reais. O cliente
+              pode consultar os detalhes, escolher a quantidade, revisar o carrinho
+              e remover itens antes de confirmar.
+            </p>
+          </article>
+
+          <article class="sobre__cartao">
+            <h2>Pagamento simulado</h2>
+            <p>
+              O pagamento existe apenas para demonstrar o fluxo acadêmico. É possível
+              escolher “Dinheiro” ou “Cartão fictício”; nenhum dado real de cartão é
+              solicitado, exibido ou armazenado.
+            </p>
+          </article>
+
+          <article class="sobre__cartao">
+            <h2>Qualidade e transparência</h2>
+            <p>
+              O comportamento das regras principais é verificado com testes
+              automatizados no Node.js. A interface também é conferida no navegador,
+              em telas de celular, tablet e desktop.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="passos container" aria-labelledby="titulo-escopo">
+        <div class="passos__cabecalho">
+          <p class="selo">Escopo com clareza</p>
+          <h2 id="titulo-escopo">O que já existe e o que vem depois</h2>
+        </div>
+
+        <ol class="passos__lista">
+          <li class="passo">
+            <span class="passo__numero" aria-hidden="true">01</span>
+            <h3>Implementado</h3>
+            <ul>
+              <li>Catálogo, detalhes e seleção de quantidade.</li>
+              <li>Carrinho com edição, remoção e total em centavos.</li>
+              <li>Pagamento simulado, histórico e status do pedido.</li>
+              <li>Layout responsivo e navegação por teclado.</li>
+            </ul>
+          </li>
+          <li class="passo">
+            <span class="passo__numero" aria-hidden="true">02</span>
+            <h3>Fora do escopo</h3>
+            <ul>
+              <li>Pagamento real ou cobrança financeira.</li>
+              <li>Login, contas e sincronização entre dispositivos.</li>
+              <li>Backend, banco de dados e API REST.</li>
+              <li>Integração física com a máquina de bebidas.</li>
+            </ul>
+          </li>
+          <li class="passo">
+            <span class="passo__numero" aria-hidden="true">03</span>
+            <h3>Próximo passo</h3>
+            <p>
+              As próximas etapas preveem a preparação da API Java/Spring, testes de
+              integração, coleção Postman/Newman e automação de CI, sempre com
+              autorização antes de avançar.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="chamada container" aria-labelledby="titulo-chamada-sobre">
+        <div>
+          <h2 id="titulo-chamada-sobre">Conheça o menu</h2>
+          <p>Escolha uma bebida e experimente o fluxo completo do projeto.</p>
+        </div>
+        <a class="botao botao--primario" href="menu.html">Ver o menu</a>
+      </section>
+    </main>
+
+    <footer class="rodape">
+      <div class="container rodape__conteudo">
+        <p><strong>Café na Mão</strong> — projeto acadêmico de pedidos de bebidas.</p>
+        <p>Pagamento simulado. Nenhum dado real de cartão é coletado.</p>
+      </div>
+    </footer>
+  </body>
+</html>
