@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "c0a5e6f0-7e2b-4d9a-9b1a-7cafe0a5e6f0",
+    "name": "Café na Mão API",
+    "description": "Coleção da API REST do Café na Mão. Execute com a API em http://localhost:8080.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "bebida_id", "value": "cha-verde-postman" },
+    { "key": "pedido_numero", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Bebidas",
+      "item": [
+        {
+          "name": "Listar bebidas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const bebidas = pm.response.json();",
+                  "pm.test('Catálogo com pelo menos 6 bebidas', () => pm.expect(bebidas.length).to.be.at.least(6));",
+                  "pm.test('Contém espresso-curto', () => pm.expect(bebidas.some(b => b.id === 'espresso-curto')).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/bebidas"
+          }
+        },
+        {
+          "name": "Criar bebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Location da bebida criada', () => pm.expect(pm.response.headers.get('Location')).to.eql('/api/bebidas/' + pm.collectionVariables.get('bebida_id')));",
+                  "const bebida = pm.response.json();",
+                  "pm.test('Id e preço retornados', () => {",
+                  "  pm.expect(bebida.id).to.eql(pm.collectionVariables.get('bebida_id'));",
+                  "  pm.expect(bebida.precoCentavos).to.eql(975);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{bebida_id}}\",\n  \"nome\": \"Chá Verde Postman\",\n  \"descricao\": \"Bebida criada pela coleção automatizada.\",\n  \"categoria\": \"Chá\",\n  \"precoCentavos\": 975\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/bebidas"
+          }
+        },
+        {
+          "name": "Buscar bebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const bebida = pm.response.json();",
+                  "pm.test('Bebida correta', () => pm.expect(bebida.id).to.eql(pm.collectionVariables.get('bebida_id')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/bebidas/{{bebida_id}}"
+          }
+        },
+        {
+          "name": "Atualizar bebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const bebida = pm.response.json();",
+                  "pm.test('Preço atualizado', () => pm.expect(bebida.precoCentavos).to.eql(1050));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Chá Verde Postman Atualizado\",\n  \"descricao\": \"Bebida atualizada pela coleção automatizada.\",\n  \"categoria\": \"Chá\",\n  \"precoCentavos\": 1050\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/bebidas/{{bebida_id}}"
+          }
+        },
+        {
+          "name": "Rejeitar bebida duplicada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('Mensagem de conflito', () => pm.expect(pm.response.json().mensagem).to.include('Já existe uma bebida'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{bebida_id}}\",\n  \"nome\": \"Duplicada\",\n  \"descricao\": \"Não deve ser criada.\",\n  \"categoria\": \"Teste\",\n  \"precoCentavos\": 100\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/bebidas"
+          }
+        },
+        {
+          "name": "Buscar bebida inexistente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/bebidas/nao-existe-postman"
+          }
+        },
+        {
+          "name": "Excluir bebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/bebidas/{{bebida_id}}"
+          }
+        },
+        {
+          "name": "Confirmar exclusão da bebida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/bebidas/{{bebida_id}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Criar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const pedido = pm.response.json();",
+                  "pm.collectionVariables.set('pedido_numero', pedido.numero);",
+                  "pm.test('Número e total calculado', () => {",
+                  "  pm.expect(pedido.numero).to.match(/^PED-/);",
+                  "  pm.expect(pedido.totalCentavos).to.eql(1550);",
+                  "});",
+                  "pm.test('Status inicial recebido', () => pm.expect(pedido.status).to.eql('recebido'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pagamento\": \"dinheiro\",\n  \"itens\": [\n    { \"bebidaId\": \"espresso-curto\", \"quantidade\": 2 },\n    { \"bebidaId\": \"cappuccino\", \"quantidade\": 1 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Listar pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const pedidos = pm.response.json();",
+                  "pm.test('Contém o pedido criado', () => pm.expect(pedidos.some(p => p.numero === pm.collectionVariables.get('pedido_numero'))).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Buscar pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pedido correto', () => pm.expect(pm.response.json().numero).to.eql(pm.collectionVariables.get('pedido_numero')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos/{{pedido_numero}}"
+          }
+        },
+        {
+          "name": "Alterar status do pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status em preparo', () => pm.expect(pm.response.json().status).to.eql('em-preparo'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"status\": \"em-preparo\" }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/pedidos/{{pedido_numero}}/status"
+          }
+        },
+        {
+          "name": "Filtrar pedidos por status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Pedido no filtro em-preparo', () => pm.expect(pm.response.json().some(p => p.numero === pm.collectionVariables.get('pedido_numero'))).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos?status=em-preparo"
+          }
+        },
+        {
+          "name": "Rejeitar pedido sem itens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"pagamento\": \"dinheiro\", \"itens\": [] }",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Rejeitar bebida inexistente no pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pagamento\": \"dinheiro\",\n  \"itens\": [\n    { \"bebidaId\": \"nao-existe-postman\", \"quantidade\": 1 }\n  ]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{base_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Excluir pedido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos/{{pedido_numero}}"
+          }
+        },
+        {
+          "name": "Limpar histórico de pedidos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204', () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos"
+          }
+        },
+        {
+          "name": "Confirmar histórico vazio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Histórico vazio', () => pm.expect(pm.response.json().length).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/pedidos"
+          }
+        }
+      ]
+    }
+  ]
+}

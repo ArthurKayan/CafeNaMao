@@ -1,21 +1,26 @@
 # Requisitos — Café na Mão
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** 10/11/2026  
-**Escopo documentado:** Etapas 1 a 5 (front-end estático, carrinho, pagamento
-simulado e histórico).  
-**Fontes:** `progresso.md`, `README.md`, código em `js/` e testes em `tests/`.
+**Escopo documentado:** Etapas 1 a 7 (front-end estático, carrinho, pagamento
+simulado, histórico e API REST em Java/Spring Boot).  
+**Fontes:** `progresso.md`, `README.md`, código em `js/`, `tests/`, `backend/src/`
+e `backend/postman/`.
 
 ## 1. Objetivo
 
 Registrar os requisitos funcionais e não funcionais implementados no Café na Mão,
 servindo de base para o plano de testes, para o relatório de resultados e para a
-evolução futura do projeto sem alterar o comportamento já validado.
+evolução futura do projeto sem alterar o comportamento já validado. A versão 1.1
+acrescenta os requisitos da API REST da Etapa 7, mantendo os identificadores
+anteriores estáveis.
 
 ## 2. Contexto e atores
 
 - **Cliente:** consulta bebidas, escolhe quantidade, monta o carrinho e confirma
   um pedido com pagamento simulado.
+- **Consumidor da API:** consulta ou administra bebidas e pedidos por requisições
+  HTTP, usando a API como fonte de verdade dos preços e do total.
 - **Avaliador acadêmico:** verifica se o fluxo funciona, se os estados de interface
   são claros e se os testes e a documentação comprovam a qualidade.
 - **Projeto acadêmico:** prioriza clareza, rastreabilidade, acessibilidade e
@@ -23,10 +28,16 @@ evolução futura do projeto sem alterar o comportamento já validado.
 
 ## 3. Premissas do escopo atual
 
-- O projeto roda por `file://`, sem servidor, build ou dependências npm.
-- Não há autenticação, backend, banco de dados ou cobrança real.
+- O front-end roda por `file://`, sem servidor, build ou dependências npm.
+- O backend roda separadamente com Spring Boot e Maven Wrapper.
+- O perfil padrão do backend usa H2 em memória; existe perfil opcional para
+  PostgreSQL, sem Docker Compose nesta etapa.
+- Não há autenticação nem cobrança real.
 - Preços são inteiros em centavos e nunca usam `float`.
-- Carrinho e histórico usam `localStorage` no navegador.
+- No backend, o servidor calcula o total a partir do preço atual da bebida; o
+  cliente envia apenas `bebidaId` e `quantidade`.
+- Carrinho e histórico do front-end usam `localStorage`; os pedidos da API usam JPA.
+- O front-end ainda não consome a API REST.
 - Nenhum dado real de cartão pode ser coletado, exibido ou armazenado.
 
 ## 4. Requisitos funcionais
@@ -48,6 +59,15 @@ evolução futura do projeto sem alterar o comportamento já validado.
 | RF13 | Exibir histórico de pedidos. | O histórico persiste no navegador, mostra o mais recente primeiro e exibe estado vazio. | Implementado |
 | RF14 | Alterar status do pedido. | O status pode ser “Recebido”, “Em preparo” ou “Finalizado” e permanece após recarregar. | Implementado |
 | RF15 | Limpar histórico com confirmação. | Cancelar mantém os pedidos; confirmar remove o armazenamento e exibe o estado vazio. | Implementado |
+| RF16 | Listar e consultar bebidas pela API. | `GET /api/bebidas` retorna o catálogo ordenado por nome; `GET /api/bebidas/{id}` retorna a bebida ou HTTP 404. | Implementado |
+| RF17 | Criar bebida pela API. | `POST /api/bebidas` valida os campos, retorna HTTP 201 com `Location` e rejeita id duplicado com HTTP 409. | Implementado |
+| RF18 | Atualizar e excluir bebida pela API. | `PUT /api/bebidas/{id}` atualiza os campos; `DELETE /api/bebidas/{id}` retorna HTTP 204; ids ausentes retornam HTTP 404. | Implementado |
+| RF19 | Validar dados de bebida. | Id com formato de slug, nome/descrição/categoria preenchidos e preço inteiro entre 0 e 1.000.000 de centavos; erros retornam HTTP 400 com campos. | Implementado |
+| RF20 | Criar pedido pela API. | `POST /api/pedidos` recebe `pagamento` e itens com `bebidaId` e `quantidade`; retorna HTTP 201 com número, itens, total, pagamento e status. | Implementado |
+| RF21 | Calcular o total no servidor. | O backend consulta o preço atual da bebida, grava uma cópia de nome/preço e calcula o total em centavos; preço enviado pelo cliente não é aceito. | Implementado |
+| RF22 | Validar pedido pela API. | Rejeita carrinho vazio, quantidade fora de 1 a 10, bebida inexistente, bebida repetida e pagamento diferente de `dinheiro`/`cartao-ficticio` com HTTP 400. | Implementado |
+| RF23 | Consultar, filtrar e alterar status de pedidos. | `GET /api/pedidos` lista do mais recente e aceita `?status=`; `GET /api/pedidos/{numero}` consulta; `PATCH /api/pedidos/{numero}/status` altera o status. | Implementado |
+| RF24 | Excluir pedido e limpar histórico pela API. | `DELETE /api/pedidos/{numero}` remove um pedido; `DELETE /api/pedidos` limpa o histórico; ambos retornam HTTP 204. | Implementado |
 
 ## 5. Requisitos não funcionais
 
@@ -63,17 +83,23 @@ evolução futura do projeto sem alterar o comportamento já validado.
 | RNF08 | Execução sem servidor. | O projeto abre por `file://` e não exige instalação de dependências. | Atendido |
 | RNF09 | Identidade visual. | Paleta neobrutalista, bordas grossas, sombras duras e contraste legível. | Atendido |
 | RNF10 | Documentação e rastreabilidade. | Requisitos, plano, relatório e progresso registram escopo, evidências e limitações. | Atendido |
+| RNF11 | Execução do backend sem Maven global. | Maven Wrapper 3.9.9 permite `.\mvnw.cmd test` e `.\mvnw.cmd spring-boot:run` em ambiente com Java. | Atendido |
+| RNF12 | Persistência configurável. | Perfil padrão usa H2 em memória; `application-postgres.properties` usa PostgreSQL com variáveis de ambiente. | Atendido com perfil PostgreSQL não executado |
+| RNF13 | Testes de integração do backend. | JUnit 5 e MockMvc cobrem sucesso, validação, limites, 404, 409 e limpeza em 29 testes. | Atendido |
+| RNF14 | Contrato de API documentado. | Coleção e ambiente Postman/Newman incluem operações principais e assertions. | Atendido (Newman aprovado) |
+| RNF15 | Precisão monetária no backend. | Preços e totais usam inteiros em centavos; o servidor recalcula o total. | Atendido |
 
 ## 6. Fora do escopo atual
 
-Não fazem parte das Etapas 1 a 5 e não devem ser considerados implementados:
+Não fazem parte das Etapas 1 a 7 e não devem ser considerados implementados:
 
-- backend Java/Spring Boot, API REST, banco de dados e Docker Compose;
-- autenticação, contas de usuário, administração e sincronização entre dispositivos;
+- integração do front-end com a API REST;
+- Docker Compose, provisionamento de PostgreSQL e autenticação;
+- contas de usuário, administração e sincronização entre dispositivos;
 - pagamento real, emissão de cobrança ou integração financeira;
 - integração física com a máquina de bebidas;
 - manutenção de máquinas e painel operacional;
-- testes automatizados de DOM, E2E, API e pipeline de CI.
+- testes automatizados de DOM/E2E, cobertura JaCoCo e pipeline de CI.
 
 ## 7. Rastreabilidade
 
@@ -96,6 +122,15 @@ Não fazem parte das Etapas 1 a 5 e não devem ser considerados implementados:
 | RF13 | CT17, CT18, CT19, CT20 | `tests/historico.test.js` e verificação no navegador. |
 | RF14 | CT21, CT22 | `tests/historico.test.js` e verificação manual. |
 | RF15 | CT23 | `tests/historico.test.js` e verificação manual do diálogo. |
+| RF16 | CT27 | `BebidaControllerIntegrationTest` e chamadas HTTP reais à API. |
+| RF17 | CT28 | `BebidaControllerIntegrationTest` (201 e 409). |
+| RF18 | CT30 | `BebidaControllerIntegrationTest` (PUT, DELETE e 404). |
+| RF19 | CT29 | `BebidaControllerIntegrationTest` e Bean Validation. |
+| RF20 | CT31 | `PedidoControllerIntegrationTest` e chamadas HTTP reais. |
+| RF21 | CT31 | `PedidoControllerIntegrationTest` (total e cópia de itens). |
+| RF22 | CT32, CT33, CT34, CT35 | `PedidoControllerIntegrationTest`. |
+| RF23 | CT36 | `PedidoControllerIntegrationTest`. |
+| RF24 | CT37 | `PedidoControllerIntegrationTest`. |
 
 ### 7.2 Requisitos não funcionais
 
@@ -111,13 +146,20 @@ Não fazem parte das Etapas 1 a 5 e não devem ser considerados implementados:
 | RNF08 | CT26 | Abertura das páginas por `file://`. |
 | RNF09 | CT24, CT25 | Verificação visual e de contraste. |
 | RNF10 | CT26 | Documentos em `docs/`, `README.md` e `progresso.md`. |
+| RNF11 | CT39 | `.\mvnw.cmd test` e `.\mvnw.cmd -v` sem Maven global. |
+| RNF12 | CT39 | Perfil padrão H2; arquivo `application-postgres.properties` presente. |
+| RNF13 | CT31, CT32, CT33, CT34, CT35, CT36, CT37 | 29 testes JUnit/MockMvc aprovados. |
+| RNF14 | CT38 | Newman com 18 requisições e 32 assertions aprovadas, sem falhas. |
+| RNF15 | CT31 | Total em centavos calculado no servidor. |
 
 ## 8. Critérios de aceitação do escopo atual
 
 - As páginas principais abrem sem servidor e sem erro no console.
 - O fluxo de catálogo, detalhe, carrinho, pagamento, confirmação e histórico é
   concluído em um navegador moderno.
-- Os 53 testes automatizados passam com `npm test`.
+- Os 53 testes do front-end passam com `npm test`.
+- Os 29 testes de integração do backend passam com `.\mvnw.cmd test`.
+- A API responde com os códigos HTTP documentados para sucesso e erro.
 - Não há dados reais de cartão no código, no armazenamento ou na interface.
 - Layout sem rolagem horizontal nas larguras verificadas.
 - As limitações e o que ainda não existe estão documentados sem ambiguidade.

@@ -1,13 +1,14 @@
 # Relatório de testes — Café na Mão
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** 10/11/2026  
-**Escopo:** Etapas 1 a 5, com verificação complementar da Etapa 6.  
+**Escopo:** Etapas 1 a 7 — front-end, documentação, backend, API REST e testes de integração.  
 **Plano relacionado:** [plano-de-testes.md](plano-de-testes.md)
 
 ## 1. Resumo executivo
 
-- **53 testes automatizados aprovados**, 0 reprovados, 0 ignorados.
+- **82 testes automatizados aprovados**, 0 reprovados, 0 ignorados: 53 no
+  front-end e 29 no backend.
 - Verificação de sintaxe sem erros nos arquivos JavaScript e de teste.
 - Checagens estáticas de IDs, referências ARIA, links internos, `href="#"` e
   estilos inline aprovadas.
@@ -16,20 +17,30 @@
 - Nenhum erro de JavaScript no console durante os fluxos verificados.
 - Falha simulada de gravação no histórico manteve o carrinho e bloqueou a
   confirmação, conforme previsto em CT16.
+- API REST validada por testes JUnit 5/MockMvc e por execução HTTP real com H2.
+- Coleção Postman executada com Newman: 18 requisições, 0 falhas e 32
+  assertions aprovadas.
 
-A Etapa 5 está aprovada dentro do escopo front-end. As lacunas de automação de
-DOM, API, backend, cobertura e CI estão registradas na seção 6.
+As Etapas 1 a 7 estão aprovadas dentro do escopo atual. As lacunas de integração
+do front-end com a API, cobertura, Docker Compose e CI estão registradas na
+seção 7.
 
 ## 2. Ambiente de execução
 
 | Item | Valor |
 |---|---|
 | Sistema operacional | Windows |
-| Node.js | 24.16.0 |
+| Node.js | 24.11.1 |
 | Navegador | Microsoft Edge 156 (headless via CDP) |
 | Execução das páginas | `file://` |
 | Dependências npm | Nenhuma |
-| Backend/API | Não implementado |
+| Java | 22.0.2 (compilação com `--release 21`) |
+| Spring Boot | 3.4.5 |
+| Maven | Wrapper 3.9.9 |
+| Banco padrão | H2 2.3.232 em memória |
+| Banco alternativo | PostgreSQL (perfil não executado) |
+| Testes da API | JUnit 5 + MockMvc |
+| Contrato de API | Postman/Newman 6.2.3 |
 | Data da verificação | 10/11/2026 |
 
 ## 3. Testes automatizados
@@ -73,6 +84,56 @@ Cobertura comportamental verificada:
 - alteração de status e limpeza;
 - comportamento com armazenamento indisponível.
 
+### 3.1 Backend
+
+Comando:
+
+```powershell
+cd backend
+.\mvnw.cmd test
+```
+
+Resultado:
+
+```text
+BebidaControllerIntegrationTest: Tests run: 11, Failures: 0, Errors: 0
+PedidoControllerIntegrationTest: Tests run: 18, Failures: 0, Errors: 0
+Total: 29 testes aprovados
+```
+
+Distribuição:
+
+| Arquivo | Testes | Foco |
+|---|---:|---|
+| `BebidaControllerIntegrationTest` | 11 | CRUD, validação, duplicidade, 404 e rota inexistente |
+| `PedidoControllerIntegrationTest` | 18 | Criação, total, validação, status, filtro, exclusão e limpeza |
+| **Total** | **29** | Contratos REST e regras de domínio |
+
+Cobertura comportamental verificada:
+
+- catálogo inicial com seis bebidas e consulta por id;
+- criação, atualização e exclusão de bebidas, com 201/200/204;
+- rejeição de bebida duplicada com 409 e de dados inválidos com 400;
+- 404 para bebida, pedido e rota inexistentes;
+- criação de pedido com total recalculado no servidor em centavos;
+- rejeição de pagamento inválido, carrinho vazio, quantidade fora de 1 a 10 e
+  bebida inexistente ou repetida;
+- listagem ordenada, consulta por número, filtro por status e alteração de status;
+- exclusão de pedido, limpeza do histórico e lista vazia.
+
+### 3.2 Contrato Postman/Newman
+
+Com a API em execução, a coleção foi executada com:
+
+```powershell
+npx --yes newman run postman\CafeNaMao.postman_collection.json `
+  -e postman\CafeNaMao.postman_environment.json --reporters cli --color off
+```
+
+Resultado: **18 requisições executadas, 0 falhas e 32 assertions aprovadas**,
+com duração de 3,1 s. A execução cobre bebidas e pedidos, incluindo 201, 200,
+204, 400, 404 e 409.
+
 ## 4. Verificações estáticas
 
 Foram executados:
@@ -88,8 +149,10 @@ node --check tests/dados.test.js
 node --check tests/detalhes.test.js
 node --check tests/carrinho.test.js
 node --check tests/historico.test.js
-git diff --check
 ```
+
+O comando `git diff --check` não pôde ser executado nesta sessão porque a pasta
+não contém um repositório Git inicializado (`fatal: not a git repository`).
 
 Também foi executada uma checagem auxiliar temporária, não versionada, que
 confirmou:
@@ -138,6 +201,23 @@ confirmou:
 As capturas de tela da verificação foram geradas em diretório temporário e não
 foram adicionadas ao repositório.
 
+### 5.3 API em execução
+
+O JAR foi iniciado com `java -jar target\cafe-na-mao-api-0.1.0.jar` e validado
+por chamadas HTTP reais:
+
+| Verificação | Resultado |
+|---|---|
+| `GET /api/bebidas` | 6 bebidas na carga inicial |
+| `POST /api/pedidos` com 2 espressos e 1 cappuccino | `201`, número `PED-D103D8F7`, total `1550` e status `recebido` |
+| `PATCH /api/pedidos/{numero}/status` | Status alterado para `em-preparo` |
+| `GET /api/pedidos?status=em-preparo` | 1 pedido retornado |
+| `GET /api/bebidas/nao-existe` | `404` com erro padronizado |
+| `DELETE /api/pedidos` | `204` e histórico vazio |
+| `GET /api/pedidos` após a limpeza | Lista vazia |
+
+O processo Java foi encerrado ao final e a porta 8080 ficou livre.
+
 ## 6. Situação dos casos planejados
 
 | Caso | Situação | Evidência principal |
@@ -168,6 +248,19 @@ foram adicionadas ao repositório.
 | CT24 | Aprovado | Página Sobre, menu e pedidos em três larguras |
 | CT25 | Aprovado | Verificação manual de teclado, foco e rótulos |
 | CT26 | Aprovado | Suíte, checagens estáticas e execução por `file://` |
+| CT27 | Aprovado | `BebidaControllerIntegrationTest` e chamadas HTTP reais |
+| CT28 | Aprovado | `BebidaControllerIntegrationTest` (201 e 409) |
+| CT29 | Aprovado | `BebidaControllerIntegrationTest` (400 e campos inválidos) |
+| CT30 | Aprovado | `BebidaControllerIntegrationTest` (PUT/DELETE e 404) |
+| CT31 | Aprovado | `PedidoControllerIntegrationTest` e HTTP real (total 1550) |
+| CT32 | Aprovado | `PedidoControllerIntegrationTest` (pagamento inválido) |
+| CT33 | Aprovado | `PedidoControllerIntegrationTest` (carrinho vazio) |
+| CT34 | Aprovado | `PedidoControllerIntegrationTest` (quantidade 0 e 11) |
+| CT35 | Aprovado | `PedidoControllerIntegrationTest` (bebida ausente/repetida) |
+| CT36 | Aprovado | `PedidoControllerIntegrationTest` (status e filtro) |
+| CT37 | Aprovado | `PedidoControllerIntegrationTest` (exclusão e limpeza) |
+| CT38 | Aprovado | Newman: 18 requisições e 32 assertions sem falhas |
+| CT39 | Aprovado | Wrapper, 29 testes e JAR gerado sem Maven global |
 
 ## 7. Limitações e lacunas
 
@@ -178,17 +271,24 @@ foram adicionadas ao repositório.
 - Não há verificação em múltiplos navegadores além do Edge.
 - Não há leitor de tela real na validação; a acessibilidade foi conferida por
   foco, teclado, rótulos, semântica e regiões `aria-live`.
-- Não há backend, API, banco, Postman/Newman, JUnit, JaCoCo, Docker Compose ou CI.
+- O front-end ainda não consome a API; carrinho e histórico continuam no
+  `localStorage`.
+- O perfil PostgreSQL não foi executado porque o Docker daemon não estava em
+  execução; apenas o perfil H2 foi validado.
+- O H2 é em memória: reiniciar a API recria o catálogo e apaga os pedidos.
+- Não há JaCoCo, Docker Compose, CI ou testes automatizados de DOM/E2E.
 - Não há métrica de cobertura de código; a cobertura atual é descrita por
   comportamento e por arquivos de teste.
+- A pasta não é um repositório Git nesta sessão, então `git diff --check` não foi
+  executado.
 - O plano de testes e o relatório não substituem uma nova execução após mudanças
   futuras no código.
 
 ## 8. Próximos passos recomendados
 
-1. Implementar o backend Java/Spring Boot e os endpoints REST em etapa autorizada.
-2. Criar testes JUnit 5/MockMvc e relatório de cobertura com JaCoCo.
-3. Criar coleção Postman com assertions e execução via Newman.
+1. Integrar o front-end à API em etapa autorizada, preservando o fallback atual.
+2. Adicionar cobertura de código com JaCoCo e publicar o relatório.
+3. Provisionar PostgreSQL com Docker Compose e validar o perfil alternativo.
 4. Adicionar testes automatizados de DOM/E2E para o fluxo principal.
 5. Configurar GitHub Actions para rodar build, testes e cobertura.
 6. Ampliar a verificação de acessibilidade e a matriz de navegadores.
@@ -196,8 +296,9 @@ foram adicionadas ao repositório.
 
 ## 9. Conclusão
 
-O escopo front-end das Etapas 1 a 5 está funcional e coberto por 53 testes
-automatizados, verificações estáticas e roteiros manuais de interface. A Etapa 6
-foi concluída com requisitos, plano, relatório e página Sobre. O projeto ainda não
-possui backend, API, banco ou CI; essas lacunas estão fora do escopo atual e
-devem ser tratadas em etapas posteriores com autorização explícita.
+As Etapas 1 a 7 estão concluídas. O front-end continua funcional por `file://`
+com 53 testes aprovados; o backend expõe a API REST de bebidas e pedidos com 29
+testes de integração aprovados e validação HTTP real. A coleção Postman foi
+executada com Newman sem falhas. A integração do front-end com a API, o perfil
+PostgreSQL, JaCoCo, Docker Compose, CI e testes E2E permanecem como próximos
+passos, fora do escopo desta etapa.

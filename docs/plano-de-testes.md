@@ -1,11 +1,11 @@
 # Plano de testes — Café na Mão
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Data:** 10/11/2026  
-**Escopo:** Etapas 1 a 5 do front-end estático.  
+**Escopo:** Etapas 1 a 7 — front-end estático e API REST Java/Spring Boot.  
 **Objetivo:** definir a estratégia, os ambientes, os critérios e os casos de teste
-para validar o fluxo de catálogo, carrinho, pagamento simulado e histórico de
-pedidos.
+para validar o fluxo de catálogo, carrinho, pagamento simulado, histórico de
+pedidos e os endpoints da API.
 
 ## 1. Escopo
 
@@ -18,13 +18,18 @@ pedidos.
 - Histórico, status e limpeza do histórico.
 - Acessibilidade, responsividade e verificações estáticas.
 - Testes unitários com `node:test`.
+- API REST de bebidas e pedidos com Spring Boot.
+- Validação de dados, cálculo do total no servidor e códigos HTTP.
+- Testes de integração com JUnit 5/MockMvc.
+- Coleção Postman/Newman.
 
 ### 1.2 Excluído
 
-- Backend, API REST, banco de dados, Docker Compose e CI.
+- Integração do front-end com a API REST.
+- Docker Compose, provisionamento de PostgreSQL, JaCoCo e CI.
 - Pagamento real, autenticação, contas e sincronização entre dispositivos.
 - Integração física com a máquina de bebidas.
-- Testes automatizados de DOM, E2E e API nesta fase.
+- Testes automatizados de DOM e E2E nesta fase.
 - Testes de carga, segurança ofensiva e compatibilidade com todos os navegadores.
 
 ## 2. Referências
@@ -45,8 +50,11 @@ pedidos.
    horizontal e sem elementos cortados.
 4. **Verificações estáticas:** checar sintaxe, IDs, referências ARIA, links internos,
    ausência de `href="#"` e estilos inline.
-5. **Evolução futura:** adicionar testes de API com Postman/Newman, testes de
-   integração Java e pipeline de CI quando o backend for autorizado.
+5. **Testes de integração da API:** subir o contexto Spring Boot com H2 e exercitar
+   os endpoints com JUnit 5/MockMvc, incluindo sucesso, validação, limites, 404 e 409.
+6. **Testes de contrato manual/automatizado:** executar a coleção Postman/Newman
+   contra a API em execução.
+7. **Evolução futura:** integração do front-end, JaCoCo, Docker Compose e CI.
 
 Os testes priorizam comportamento observável. Não devem depender de serviços
 externos, dados reais de cartão ou de uma máquina física.
@@ -56,16 +64,22 @@ externos, dados reais de cartão ou de uma máquina física.
 | Item | Versão/configuração atual |
 |---|---|
 | Sistema | Windows 10/11 |
-| Node.js | 24.16.0 |
+| Node.js | 24.11.1 |
 | Navegador | Microsoft Edge 156 |
-| Execução | `file://`, sem servidor local |
-| Dependências | Nenhuma dependência npm |
-| Armazenamento | `localStorage` do navegador |
-| Backend/API | Não implementado |
+| Execução do front-end | `file://`, sem servidor local |
+| Dependências npm | Nenhuma |
+| Armazenamento do front-end | `localStorage` do navegador |
+| Java | 22.0.2 (compilação com `--release 21`) |
+| Spring Boot | 3.4.5 |
+| Maven | Wrapper 3.9.9 |
+| Banco padrão | H2 2.3.232 em memória |
+| Perfil alternativo | PostgreSQL (não executado nesta etapa) |
+| Testes da API | JUnit 5 + MockMvc |
+| Coleção de API | Postman/Newman |
 | CI | Não implementado |
 
-Ambiente futuro previsto: Java 21, Spring Boot, Maven, H2/PostgreSQL,
-Postman/Newman, JaCoCo e GitHub Actions.
+Ambiente futuro previsto: PostgreSQL provisionado, Docker Compose, JaCoCo e GitHub
+Actions.
 
 ## 5. Dados de teste
 
@@ -79,6 +93,11 @@ Postman/Newman, JaCoCo e GitHub Actions.
 | Status | `recebido`, `em-preparo`, `finalizado` |
 | Chaves locais | `cafe-na-mao:carrinho:v1`, `cafe-na-mao:historico:v1` |
 | Viewports | 390 px, 768 px e 1366 px |
+| Bebidas da API | As seis bebidas do catálogo, com ids em slug e preços em centavos |
+| Pedido de referência da API | 2 Espressos + 1 Cappuccino = 1550 centavos |
+| Pagamentos da API | `dinheiro`, `cartao-ficticio` |
+| Status da API | `recebido`, `em-preparo`, `finalizado` |
+| Erros esperados | 400 validação/regra, 404 ausente, 409 conflito |
 
 ## 6. Critérios de entrada, saída, suspensão e retomada
 
@@ -87,14 +106,17 @@ Postman/Newman, JaCoCo e GitHub Actions.
 - Código disponível e páginas abrindo no navegador.
 - Node.js instalado e `npm test` executável.
 - Navegador moderno disponível para a verificação manual.
+- Java disponível e Maven Wrapper executável para o backend.
 
 ### Saída
 
 - Casos críticos executados sem falha.
-- `npm test` com todos os testes aprovados.
+- `npm test` com todos os testes do front-end aprovados.
+- `.\mvnw.cmd test` com todos os testes do backend aprovados.
 - Nenhum erro de JavaScript no console durante o fluxo principal.
 - Nenhuma rolagem horizontal nas larguras verificadas.
 - Nenhum dado real de cartão no código, na interface ou no armazenamento.
+- API retornando os códigos HTTP previstos para sucesso e erro.
 
 ### Suspensão
 
@@ -116,7 +138,9 @@ a evidência e atualizar o relatório.
 | Diferenças de renderização | Rolagem horizontal ou foco inadequado | Verificar 390/768/1366 px e navegação por teclado |
 | Dados corrompidos no armazenamento | Histórico inválido | Validar campos, recalcular total e ignorar registros inválidos |
 | Teste manual depender do ambiente | Resultado não reproduzível | Registrar versão do navegador, viewport e passos |
-| Escopo crescer antes do backend | Retrabalho | Manter backend/API fora do escopo até autorização |
+| Divergência entre front-end e API | Regras diferentes | Cobrir as mesmas validações e manter os contratos documentados |
+| H2 em memória apagar dados ao reiniciar | Perda de pedidos de demonstração | Documentar a limitação e usar PostgreSQL quando necessário |
+| Porta 8080 ocupada | API não inicia | Identificar o processo, liberar a porta ou configurar outra |
 | Falha ao salvar pedido | Pedido perdido | Salvar histórico antes de limpar o carrinho |
 
 ## 8. Casos de teste
@@ -389,6 +413,140 @@ a evidência e atualizar o relatório.
 - **Resultado esperado:** 53 testes aprovados, sem erro de sintaxe, IDs/links válidos,
   sem servidor local e documentação rastreável.
 
+### CT27 — API lista e consulta bebidas
+
+- **Requisito:** RF16.
+- **Tipo:** automatizado e manual.
+- **Pré-condições:** backend iniciado com H2 e carga inicial concluída.
+- **Passos:** executar `GET /api/bebidas`; consultar `GET /api/bebidas/espresso-curto`;
+  consultar um id inexistente.
+- **Dados:** catálogo inicial com seis bebidas.
+- **Resultado esperado:** lista com seis bebidas ordenada por nome, consulta com preço
+  `400` e HTTP 404 para id inexistente.
+
+### CT28 — API cria bebida e rejeita duplicidade
+
+- **Requisito:** RF17.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `BebidaControllerIntegrationTest`.
+- **Passos:** enviar uma bebida nova; repetir o mesmo id.
+- **Dados:** id `cha-verde-teste`, preço `525` centavos.
+- **Resultado esperado:** HTTP 201 com `Location`, depois HTTP 409 com mensagem de
+  conflito.
+
+### CT29 — API valida dados de bebida
+
+- **Requisito:** RF19.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `BebidaControllerIntegrationTest`.
+- **Passos:** enviar id com formato inválido, nome vazio, descrição vazia, categoria
+  vazia e preço negativo.
+- **Dados:** payload inválido.
+- **Resultado esperado:** HTTP 400 com a lista de campos inválidos.
+
+### CT30 — API atualiza e exclui bebida
+
+- **Requisito:** RF18.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `BebidaControllerIntegrationTest`.
+- **Passos:** atualizar uma bebida; excluir uma bebida temporária; repetir as
+  operações com id inexistente.
+- **Dados:** `mocha` com preço `900`; bebida temporária.
+- **Resultado esperado:** HTTP 200 na atualização, HTTP 204 na exclusão, HTTP 404 nas
+  operações com id inexistente.
+
+### CT31 — API cria pedido e calcula o total no servidor
+
+- **Requisito:** RF20, RF21, RNF15.
+- **Tipo:** automatizado e manual.
+- **Pré-condições:** backend iniciado e bebidas carregadas.
+- **Passos:** enviar `POST /api/pedidos` com 2 Espressos e 1 Cappuccino; conferir o
+  corpo da resposta.
+- **Dados:** `dinheiro`; total esperado `1550` centavos.
+- **Resultado esperado:** HTTP 201, número `PED-…`, itens com cópia de nome/preço,
+  status `recebido` e total `1550` calculado pelo servidor.
+
+### CT32 — API rejeita pagamento inválido
+
+- **Requisito:** RF22.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar pedido com pagamento `pix`.
+- **Dados:** um item válido e pagamento desconhecido.
+- **Resultado esperado:** HTTP 400 com mensagem sobre as formas aceitas.
+
+### CT33 — API rejeita carrinho vazio
+
+- **Requisito:** RF22.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar pedido com lista `itens` vazia.
+- **Dados:** `itens: []`.
+- **Resultado esperado:** HTTP 400 com campo `itens` inválido.
+
+### CT34 — API rejeita quantidade fora de 1 a 10
+
+- **Requisito:** RF22.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar pedidos com quantidade `0` e `11`.
+- **Dados:** uma bebida por pedido.
+- **Resultado esperado:** HTTP 400 nos dois casos com campo de quantidade inválido.
+
+### CT35 — API rejeita bebida inexistente ou repetida
+
+- **Requisito:** RF22.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar pedido com id inexistente; criar pedido com a mesma bebida duas
+  vezes.
+- **Dados:** `nao-existe` e `mocha` repetida.
+- **Resultado esperado:** HTTP 400 com mensagens específicas.
+
+### CT36 — API lista, filtra e altera status
+
+- **Requisito:** RF23.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar pedidos; consultar por número; alterar status para `em-preparo`;
+  filtrar por status; tentar status inválido.
+- **Dados:** status `recebido`, `em-preparo`, `finalizado` e `perdido`.
+- **Resultado esperado:** listagem do mais recente, consulta correta, status atualizado,
+  filtro coerente, HTTP 400 para status inválido e HTTP 404 para pedido ausente.
+
+### CT37 — API exclui pedido e limpa histórico
+
+- **Requisito:** RF24.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `PedidoControllerIntegrationTest`.
+- **Passos:** criar e excluir um pedido; limpar todos os pedidos; consultar a lista.
+- **Dados:** dois pedidos criados.
+- **Resultado esperado:** HTTP 204 nas exclusões, HTTP 404 após excluir um pedido e
+  lista vazia após a limpeza.
+
+### CT38 — Contrato Postman/Newman
+
+- **Requisito:** RNF14.
+- **Tipo:** contrato.
+- **Pré-condições:** API em execução e Newman disponível.
+- **Passos:** executar a coleção com o ambiente local; conferir as assertions de
+  status, campos e totais.
+- **Dados:** `backend/postman/CafeNaMao.postman_collection.json` e ambiente local.
+- **Resultado esperado:** todas as requisições da coleção aprovadas. O JSON da coleção
+  e do ambiente deve ser válido mesmo quando o Newman não estiver instalado.
+- **Resultado obtido:** 18 requisições executadas, 0 falhas e 32 assertions aprovadas.
+
+### CT39 — Build e testes do backend sem Maven global
+
+- **Requisito:** RNF11, RNF12, RNF13.
+- **Tipo:** automatizado/estático.
+- **Pré-condições:** Java instalado e pasta `backend/`.
+- **Passos:** executar `.\mvnw.cmd -v`, `.\mvnw.cmd test` e
+  `.\mvnw.cmd -DskipTests package`; conferir o perfil H2 e o arquivo PostgreSQL.
+- **Dados:** Maven Wrapper 3.9.9; Spring Boot 3.4.5; H2 em memória.
+- **Resultado esperado:** wrapper funcional, 29 testes aprovados, JAR gerado,
+  `application-postgres.properties` presente e H2 configurado no perfil padrão.
+
 ## 9. Rastreabilidade resumida
 
 | Área | Requisitos | Casos |
@@ -399,17 +557,22 @@ a evidência e atualizar o relatório.
 | Carrinho | RF06, RF07, RF08, RF09, RF10 | CT08 a CT12 |
 | Pagamento e confirmação | RF11, RF12, RNF05, RNF06 | CT13 a CT16 |
 | Histórico e status | RF13, RF14, RF15 | CT17 a CT23 |
-| Qualidade não funcional | RNF01 a RNF10 | CT24, CT25, CT26 |
+| Qualidade não funcional do front-end | RNF01 a RNF10 | CT24, CT25, CT26 |
+| Bebidas na API | RF16, RF17, RF18, RF19 | CT27 a CT30 |
+| Pedidos na API | RF20, RF21, RF22, RF23, RF24 | CT31 a CT37 |
+| Qualidade não funcional do backend | RNF11 a RNF15 | CT31, CT38, CT39 |
 
 ## 10. Métricas e aprovação
 
-- **Casos planejados:** 26 (23 funcionais e 3 não funcionais).
-- **Com suporte automatizado:** CT04, CT06, CT07, CT08, CT09, CT11, CT12, CT18,
-  CT19, CT21, CT22, CT23 e CT26.
+- **Casos planejados:** 39 (34 funcionais e 5 não funcionais).
+- **Com suporte automatizado no front-end:** CT04, CT06, CT07, CT08, CT09, CT11,
+  CT12, CT18, CT19, CT21, CT22, CT23 e CT26.
+- **Com suporte automatizado no backend:** CT27 a CT39 (CT38 via Newman).
+- **Contrato Postman/Newman:** CT38 (executado e aprovado com Newman).
 - **Verificação manual obrigatória:** CT01, CT02, CT03, CT05, CT10, CT13 a CT17,
   CT20, CT24 e CT25.
-- **Aprovação:** todos os casos críticos aprovados, 53 testes unitários aprovados,
-  ausência de erro no console, ausência de rolagem horizontal nas larguras alvo e
-  nenhum dado real de cartão.
+- **Aprovação:** todos os casos críticos aprovados, 53 testes do front-end e 29
+  testes do backend aprovados, ausência de erro no console, ausência de rolagem
+  horizontal nas larguras alvo e nenhum dado real de cartão.
 - **Evidências:** registrar comandos, resultados e limitações em
   `docs/relatorio-testes.md`.
