@@ -94,6 +94,7 @@ CaféNaMão/
 │   ├── historico.test.js
 │   └── api.test.js
 ├── backend/
+│   ├── Dockerfile
 │   ├── pom.xml
 │   ├── mvnw
 │   ├── mvnw.cmd
@@ -108,7 +109,8 @@ CaféNaMão/
 ├── docs/
 │   ├── requisitos.md
 │   ├── plano-de-testes.md
-│   └── relatorio-testes.md
+│   ├── relatorio-testes.md
+│   └── roteiro-apresentacao.md
 ├── .github/workflows/ci.yml
 ├── compose.yaml
 ├── package.json
@@ -255,12 +257,26 @@ cd backend
 ```
 
 O `verify` executa os testes, gera o JAR e aplica o gate JaCoCo de **80% de linhas**
-e **50% de branches**. A medição atual é **93,59% de linhas** e **62,50% de
-branches**.
+e **50% de branches**. A medição atual é **94,31% de linhas** e **70% de branches**.
 
-A suíte tem **65 testes do front-end** e **31 testes de backend**, totalizando
-**96 testes automatizados aprovados**. Não há dependências npm além do próprio
-Node.js para o front-end.
+A suíte tem **65 testes do front-end** e **40 testes de backend**, totalizando
+**105 testes automatizados aprovados**. Os testes usam H2 em memória e não exigem
+configurar banco. No backend, 9 testes unitários de `PedidoService` usam Mockito e
+AAA explícito; os demais são testes de integração com JUnit 5/MockMvc. Não há
+dependências npm além do próprio Node.js para o front-end.
+
+### Testes automatizados com Docker Compose
+
+Para executar a suíte em containers, sem instalar Java, Maven ou Node localmente:
+
+```powershell
+docker compose --profile testes run --rm testes-backend
+docker compose --profile testes run --rm testes-frontend
+```
+
+O primeiro comando constrói a imagem do backend, executa os 40 testes, gera o JAR e
+valida o gate JaCoCo. O segundo usa Node 24 e executa os 65 testes do front-end.
+O perfil `testes` não sobe o PostgreSQL e não interfere no serviço `banco`.
 
 ### API com Postman/Newman
 
@@ -300,6 +316,7 @@ executado no GitHub Actions em 13/11/2026 e os três jobs passaram (run
 - [Requisitos](docs/requisitos.md)
 - [Plano de testes](docs/plano-de-testes.md)
 - [Relatório de testes](docs/relatorio-testes.md)
+- [Roteiro de apresentação](docs/roteiro-apresentacao.md)
 - [Progresso do projeto](progresso.md)
 
 ## Acessibilidade e responsividade
@@ -327,11 +344,20 @@ navegação por teclado, `aria-live` para mensagens e suporte a
 
 ## Uso de IA
 
-O projeto foi desenvolvido com apoio de IA (OpenCode/DeepSeek) para implementação,
-revisão e documentação. As alterações foram conferidas manualmente, testadas com
-`npm test`, `.\mvnw.cmd verify` e Newman, além de chamadas HTTP reais e verificação
-no navegador. O uso de IA não substitui a validação do código nem a conferência dos
-resultados.
+O projeto foi desenvolvido com apoio do **OpenCode com o modelo DeepSeek**. A IA foi
+usada como ferramenta de apoio, não como substituta da validação.
+
+| Uso | Como foi aplicado | Verificação humana |
+|---|---|---|
+| Implementação | Sugestões de código para o front-end, API Spring Boot, testes e Compose | Leitura do diff, execução dos testes e revisão dos contratos |
+| Testes | Casos unitários, integração, contrato e roteiro E2E | `npm test`, `mvnw verify`, Newman e verificação no navegador |
+| Documentação | Requisitos, plano, relatório, README e progresso | Conferência de contagens, links, datas e resultados reais |
+| Depuração | Investigação de falhas de porta, CORS, CI e persistência | Reprodução local e confirmação por logs/HTTP |
+
+Não foram fornecidos segredos, tokens, dados pessoais reais ou dados de cartão. As
+respostas da IA foram revisadas antes de serem aceitas; a responsabilidade final pelo
+conteúdo e pelas decisões técnicas é humana. O histórico de prompts não é publicado
+por não fazer parte do artefato acadêmico.
 
 ## Próximos passos
 

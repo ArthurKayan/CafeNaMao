@@ -1,20 +1,24 @@
 # Relatório de testes — Café na Mão
 
-**Versão:** 1.2
+**Versão:** 1.3
 **Data:** 13/11/2026
 **Escopo:** Etapas 1 a 8 — front-end integrado à API, backend, PostgreSQL,
-cobertura, CI e documentação.
+cobertura, CI, documentação e adequação final à rubrica.
 **Plano relacionado:** [plano-de-testes.md](plano-de-testes.md)
 
 ## 1. Resumo executivo
 
-- **96 testes automatizados aprovados**, 0 reprovados, 0 ignorados: 65 no
-  front-end e 31 no backend.
-- **12 testes novos** cobrem o cliente HTTP, incluindo normalização, erros HTTP,
-  falha de conexão e timeout.
-- **2 testes novos** cobrem CORS com `Origin: null`.
-- JaCoCo aprovado: **93,59% de linhas** (263 cobertas, 18 perdidas) e **62,50% de
+- **105 testes automatizados aprovados**, 0 reprovados, 0 ignorados: 65 no
+  front-end e 40 no backend.
+- **12 testes** cobrem o cliente HTTP, incluindo normalização, erros HTTP, falha de
+  conexão e timeout.
+- **2 testes** cobrem CORS com `Origin: null`.
+- **9 testes unitários** cobrem `PedidoService` com Mockito, AAA explícito e
+  valores-limite `0`, `1`, `10` e `11`.
+- JaCoCo aprovado: **94,31% de linhas** (265 cobertas, 16 perdidas) e **70% de
   branches**; gate de 80% de linhas e 50% de branches atendido.
+- Perfil `testes` do Docker Compose executou as suítes de front-end e backend em
+  containers, sem banco externo.
 - Newman: **18 requisições, 32 assertions e 0 falhas**.
 - Integração validada no Edge headless via CDP: catálogo, criação de pedido,
   status, limpeza, fallback local e console sem erros.
@@ -112,7 +116,8 @@ Resultado:
 BebidaControllerIntegrationTest: Tests run: 11, Failures: 0, Errors: 0
 PedidoControllerIntegrationTest: Tests run: 18, Failures: 0, Errors: 0
 CorsIntegrationTest: Tests run: 2, Failures: 0, Errors: 0
-Total: 31 testes aprovados
+PedidoServiceTest: Tests run: 9, Failures: 0, Errors: 0
+Total: 40 testes aprovados
 ```
 
 Distribuição:
@@ -122,9 +127,24 @@ Distribuição:
 | `BebidaControllerIntegrationTest` | 11 | CRUD, validação, duplicidade, 404 e rota inexistente |
 | `PedidoControllerIntegrationTest` | 18 | Criação, total, validação, status, filtro, exclusão e limpeza |
 | `CorsIntegrationTest` | 2 | CORS para `file://`, incluindo `Origin: null` |
-| **Total** | **31** | Contratos REST, regras de domínio e CORS |
+| `PedidoServiceTest` | 9 | Regras de serviço, limites, duplicidade, overflow e status |
+| **Total** | **40** | Contratos REST, regras de domínio, CORS e unidade |
 
-### 3.3 Cobertura JaCoCo
+### 3.3 Testes unitários e padrão AAA
+
+`PedidoServiceTest` não sobe o Spring: usa Mockito para isolar `PedidoRepository` e
+`BebidaRepository`. Cada teste separa explicitamente:
+
+- **Arrange:** criação dos mocks, bebida e requisição;
+- **Act:** chamada ao método do serviço;
+- **Assert:** verificação do total, status, mensagem ou exceção.
+
+Casos cobertos: quantidades `1` e `10` aceitas; `0` e `11` rejeitadas; bebida
+repetida; bebida inexistente; overflow do total; atualização de status; e busca de
+pedido inexistente. Os testes de integração também seguem a mesma ordem lógica, com
+preparação da requisição, execução via `MockMvc` e verificações encadeadas.
+
+### 3.4 Cobertura JaCoCo
 
 O `verify` gerou o JAR, o relatório JaCoCo e executou a checagem mínima:
 
@@ -136,10 +156,10 @@ BUILD SUCCESS
 
 | Métrica | Resultado | Gate |
 |---|---:|---:|
-| Linhas | 93,59% (263/281) | 80% |
-| Branches | 62,50% | 50% |
+| Linhas | 94,31% (265/281) | 80% |
+| Branches | 70% (28/40) | 50% |
 
-### 3.4 Contrato Postman/Newman
+### 3.5 Contrato Postman/Newman
 
 Com a API em execução:
 
@@ -237,20 +257,37 @@ O workflow foi executado no GitHub Actions em 13/11/2026 (run
 [43422700883](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883)),
 com os três jobs concluídos com sucesso.
 
+### 5.5 Execução das suítes via Docker Compose
+
+Com o Docker em execução, os testes foram repetidos em containers sem instalar Java,
+Maven ou Node no host:
+
+```powershell
+docker compose --profile testes run --rm testes-backend
+docker compose --profile testes run --rm testes-frontend
+```
+
+| Serviço | Resultado |
+|---|---|
+| `testes-backend` | 40 testes, JAR gerado, gate JaCoCo atendido |
+| `testes-frontend` | 65 testes aprovados |
+| Banco externo | Não necessário; H2 em memória |
+
 ## 6. Situação dos casos planejados
 
 | Caso | Situação | Evidência principal |
 |---|---|---|
 | CT01 a CT26 | Aprovados | Regressão das Etapas 1 a 6 e `npm test` com 65 testes |
-| CT27 a CT39 | Aprovados | 31 testes backend, HTTP real e Newman |
+| CT27 a CT39 | Aprovados | 31 testes de integração, HTTP real e Newman |
 | CT40 | Aprovado | `tests/api.test.js` com 12 testes |
 | CT41 | Aprovado | E2E do menu com API e fallback local |
 | CT42 | Aprovado | E2E de pedido, status, limpeza e histórico local |
 | CT43 | Aprovado | `CorsIntegrationTest` com `Origin: null` |
-| CT44 | Aprovado | JaCoCo: 93,59% linhas e 62,50% branches |
+| CT44 | Aprovado | JaCoCo: 94,31% linhas e 70% branches |
 | CT45 | Aprovado | PostgreSQL via Compose e persistência após reinício |
 | CT46 | Aprovado | YAML válido, job local com 18/32 e três jobs aprovados no GitHub Actions |
-| CT47 | Aprovado | 65 + 31 testes, Newman e documentação revisada |
+| CT47 | Aprovado | 65 + 40 testes, Newman e documentação revisada |
+| CT48 | Aprovado | 9 testes unitários e suítes executadas pelo perfil Compose `testes` |
 
 ## 7. Limitações e lacunas
 
@@ -281,7 +318,8 @@ com os três jobs concluídos com sucesso.
 
 As Etapas 1 a 8 estão concluídas e validadas no CI. O front-end funciona por
 `file://`, consome a API quando disponível e mantém fallback local. A suíte tem 65
-testes de front-end e 31 de backend, a cobertura atende ao gate JaCoCo, o contrato
-Newman passa, o PostgreSQL via Compose preserva dados, o workflow foi aprovado no
-GitHub Actions e a página Sobre foi revisada. Os testes E2E versionados permanecem
-como próximo passo.
+testes de front-end e 40 de backend, incluindo 9 testes unitários com AAA; a
+cobertura atende ao gate JaCoCo, o contrato Newman passa, o PostgreSQL via Compose
+preserva dados, o perfil `testes` executa as suítes em containers, o workflow foi
+aprovado no GitHub Actions e a página Sobre foi revisada. Os testes E2E versionados
+permanecem como próximo passo.

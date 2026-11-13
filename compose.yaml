@@ -18,5 +18,19 @@ services:
       retries: 12
     restart: unless-stopped
 
+  testes-backend:
+    profiles: ["testes"]
+    build:
+      context: ./backend
+    command: ["mvn", "-B", "verify"]
+
+  testes-frontend:
+    profiles: ["testes"]
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - .:/app:ro
+    command: ["npm", "test"]
+
 volumes:
   dados-cafenamao:

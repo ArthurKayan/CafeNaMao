@@ -26,7 +26,7 @@ node --check js/api.js                # checagem de sintaxe (faça para cada JS 
 ### Backend (`backend/`)
 
 ```powershell
-.\mvnw.cmd test                        # 31 testes JUnit 5/MockMvc
+.\mvnw.cmd test                        # 40 testes JUnit 5/Mockito/MockMvc
 .\mvnw.cmd verify                      # testes + JAR + relatório/checagem JaCoCo
 .\mvnw.cmd -DskipTests package        # gera target\cafe-na-mao-api-0.1.0.jar
 .\mvnw.cmd spring-boot:run            # API em http://localhost:8080 (H2 em memória)
@@ -39,6 +39,8 @@ node --check js/api.js                # checagem de sintaxe (faça para cada JS 
 docker compose up -d
 docker compose ps
 docker compose down
+docker compose --profile testes run --rm testes-backend
+docker compose --profile testes run --rm testes-frontend
 ```
 
 - O Compose usa a porta host `5433` por padrão (`DB_PORT`), pois `5432` pode estar ocupada por um PostgreSQL nativo. O backend também usa `5433` por padrão no perfil `postgres`; sobreponha com `DB_URL`, `DB_USER` e `DB_PASSWORD` se necessário.
@@ -68,14 +70,15 @@ docker compose down
 - `backend/src/main/java/com/cafenamao/comum/` — exceções de domínio e `ApiExceptionHandler` com respostas de erro padronizadas.
 - `backend/src/main/java/com/cafenamao/config/WebConfig.java` — CORS para `/api/**`, permitindo `Origin: null` de páginas abertas por `file://`.
 - `backend/src/main/java/com/cafenamao/config/DadosIniciais.java` — carga inicial idempotente das seis bebidas.
-- `backend/src/test/java/com/cafenamao/` — testes de integração com `@SpringBootTest`, `MockMvc` e `@Transactional`, incluindo `CorsIntegrationTest`.
+- `backend/src/test/java/com/cafenamao/` — testes de integração com `@SpringBootTest`, `MockMvc` e `@Transactional`, incluindo `CorsIntegrationTest`, e testes unitários de `PedidoServiceTest` com Mockito e AAA.
 - `backend/postman/` — coleção e ambiente Postman/Newman.
 - O perfil padrão usa H2 em memória (`ddl-auto=create-drop`); `application-postgres.properties` usa PostgreSQL, com porta padrão `5433` e variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`.
 - `backend/pom.xml` configura JaCoCo 0.8.12 com relatório e checagem mínima de 80% de linhas e 50% de branches.
 
 ### Infraestrutura e CI
 
-- `compose.yaml` — PostgreSQL 16 Alpine, healthcheck, volume e porta host configurável.
+- `compose.yaml` — PostgreSQL 16 Alpine, healthcheck, volume e porta host configurável; perfil `testes` executa as suítes de backend e front-end em containers.
+- `backend/Dockerfile` — imagem Maven/Temurin usada pelo serviço `testes-backend`.
 - `.github/workflows/ci.yml` — jobs de front-end, backend/JaCoCo e contrato Newman. O workflow passou no GitHub Actions em 13/11/2026 (run 43422700883).
 - `.github/workflows/ci.yml` publica o relatório JaCoCo e o JAR como artefatos.
 
@@ -99,5 +102,7 @@ docker compose down
 - O H2 é em memória: reiniciar o backend recria o catálogo e apaga pedidos. Use o perfil PostgreSQL + Compose para validar persistência.
 - O endpoint `DELETE /api/pedidos` limpa todo o histórico; use apenas em testes/demonstração.
 - Não há testes de DOM/E2E versionados; a integração foi verificada com script temporário via CDP no Edge. Não adicione dependências apenas para E2E sem autorização.
-- A cobertura atual do backend é 93,59% de linhas e 62,50% de branches; os limites do build são 80% e 50%.
+- A cobertura atual do backend é 94,31% de linhas e 70% de branches; os limites do build são 80% e 50%.
+- A suíte tem 65 testes de front-end e 40 de backend (105 total); o plano tem 48 casos e todos declaram a técnica aplicada.
+- Use `docker compose --profile testes run --rm testes-backend` e `testes-frontend` para repetir as suítes sem instalar Java, Maven ou Node no host, com Docker em execução.
 - Ao final de cada sessão, atualize `progresso.md` com resultados, pendências e a próxima etapa.

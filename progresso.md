@@ -1,9 +1,11 @@
 # PROGRESSO — Café na Mão
 
 **Última atualização:** 13/11/2026
-**Status:** Etapas 1 a 8 concluídas e validadas no GitHub Actions. Próxima etapa
-ainda não autorizada.
-**Git:** commit `6e9a544` (`feat: implementa etapa 8`) enviado para `origin/main`.
+**Status:** Etapas 1 a 8 concluídas e validadas no GitHub Actions. Adequação à
+rubrica implementada; falta a validação final e o novo push.
+**Git:** commits `6e9a544` (`feat: implementa etapa 8`) e `b9821d6`
+(`docs: registra CI aprovado da etapa 8`) enviados para `origin/main`. Os ajustes
+de rubrica desta rodada ainda não foram commitados.
 
 Este arquivo registra o estado real do projeto, as decisões tomadas, as verificações
 executadas, as pendências e o próximo passo. Para retomar, leia também
@@ -120,11 +122,13 @@ cd backend
 
 Resultado final:
 
-- **31 testes aprovados**, 0 falhas, 0 erros, 0 ignorados;
-- 11 testes de bebidas, 18 de pedidos e 2 de CORS;
+- **40 testes aprovados**, 0 falhas, 0 erros, 0 ignorados;
+- 11 testes de bebidas, 18 de pedidos, 2 de CORS e 9 unitários de serviço;
+- `PedidoServiceTest` usa Mockito, AAA explícito e valores-limite `0`, `1`, `10` e
+  `11`;
 - JAR gerado em `backend/target/cafe-na-mao-api-0.1.0.jar`;
 - relatório JaCoCo gerado;
-- gate atendido com **93,59% de linhas** (263/281) e **62,50% de branches**;
+- gate atendido com **94,31% de linhas** (265/281) e **70% de branches** (28/40);
 - `BUILD SUCCESS`.
 
 ### Contrato Postman/Newman
@@ -200,14 +204,30 @@ npx --yes js-yaml .github/workflows/ci.yml
 
 Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
+### Adequação à rubrica
+
+- Técnica de teste declarada em todos os **48 casos** do plano (`CT01` a `CT48`).
+- **9 testes unitários** adicionados em `PedidoServiceTest`, usando Mockito, AAA e
+  valores-limite.
+- Total atualizado para **105 testes**: 65 no front-end e 40 no backend.
+- Cobertura atualizada para **94,31% de linhas** e **70% de branches**.
+- Perfil `testes` adicionado ao `compose.yaml`, com `testes-backend` e
+  `testes-frontend`.
+- `docker compose --profile testes run --rm testes-backend` e
+  `docker compose --profile testes run --rm testes-frontend` executados com sucesso.
+- `backend/Dockerfile` e `backend/.dockerignore` criados para execução em containers.
+- README ampliado com comandos de Compose e seção `Uso de IA`.
+- `docs/roteiro-apresentacao.md` criado para apoiar a demonstração e as perguntas.
+
 ## 5. Tarefas pendentes
 
+- Fazer a validação final, o commit e o push dos ajustes de rubrica; depois conferir
+  o novo workflow no GitHub Actions.
 - Versionar um teste E2E estável, se isso for autorizado; a avaliação da Etapa 8
   concluiu que o roteiro temporário é suficiente para o escopo atual.
 - Ampliar a matriz de navegadores e a verificação de acessibilidade.
 - Revisar a configuração de CORS para um eventual ambiente publicado.
 - Atualizar a documentação a cada nova etapa.
-- Definir e autorizar a próxima etapa; não iniciar a Etapa 9 sem pedido explícito.
 
 ## 6. Arquivos modificados e criados
 
@@ -215,6 +235,7 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 - `AGENTS.md`
 - `README.md`
+- `backend/Dockerfile`
 - `backend/pom.xml`
 - `backend/src/main/resources/application-postgres.properties`
 - `docs/plano-de-testes.md`
@@ -234,7 +255,10 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 - `.github/workflows/ci.yml`
 - `backend/src/main/java/com/cafenamao/config/WebConfig.java`
 - `backend/src/test/java/com/cafenamao/config/CorsIntegrationTest.java`
+- `backend/src/test/java/com/cafenamao/pedido/PedidoServiceTest.java`
+- `backend/.dockerignore`
 - `compose.yaml`
+- `docs/roteiro-apresentacao.md`
 - `js/api.js`
 - `tests/api.test.js`
 
@@ -251,7 +275,8 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 ## 8. Próximo passo recomendado
 
-A Etapa 8 está encerrada: integração, testes, cobertura, PostgreSQL, CI, E2E e
-revisão visual foram concluídos e documentados, e o workflow passou no GitHub
-Actions. O próximo passo é definir e autorizar o escopo da Etapa 9. Não fazer novos
-commits ou pushes sem solicitação explícita.
+A Etapa 8 está encerrada e a adequação à rubrica foi implementada. O próximo passo é
+rodar as validações finais, commitar e enviar os ajustes autorizados pelo usuário e
+confirmar o novo workflow no GitHub Actions. Depois disso, a entrega estará fechada;
+E2E versionado, matriz de navegadores e CORS de produção continuam fora do escopo
+atual.

@@ -62,8 +62,11 @@ pedidos, os endpoints da API e a integração entre as camadas.
 7. **Testes de integração no navegador:** abrir as páginas por `file://`, consumir a
    API real via CDP/Edge e conferir fallback local, persistência e console.
 8. **Cobertura e infraestrutura:** executar `verify` com JaCoCo, subir PostgreSQL no
-   Compose e validar o workflow de CI.
-9. **Evolução futura:** versionar E2E e ampliar a matriz de navegadores.
+   Compose, executar os testes pelo perfil `testes` do Compose e validar o workflow
+   de CI.
+9. **Padrão AAA:** organizar os testes em Arrange (preparar), Act (executar) e
+   Assert (verificar), com destaque explícito nos testes unitários de serviço.
+10. **Evolução futura:** versionar E2E e ampliar a matriz de navegadores.
 
 Os testes priorizam comportamento observável. Não devem depender de serviços
 externos, dados reais de cartão ou de uma máquina física.
@@ -109,7 +112,7 @@ externos, dados reais de cartão ou de uma máquina física.
 | URL da API | `http://localhost:8080/api` (override por `CAFE_NA_MAO_API_URL` ou `?api=`) |
 | Pedido do E2E | 2 Espressos = 800 centavos; número `PED-501ECE45` |
 | Persistência PostgreSQL | Pedido `PED-7D812006`; 6 bebidas; histórico limpo ao final |
-| Cobertura JaCoCo | 93,59% linhas; 62,50% branches |
+| Cobertura JaCoCo | 94,31% linhas; 70% branches |
 
 ## 6. Critérios de entrada, saída, suspensão e retomada
 
@@ -126,7 +129,7 @@ externos, dados reais de cartão ou de uma máquina física.
 
 - Casos críticos executados sem falha.
 - `npm test` com 65 testes do front-end aprovados.
-- `.\mvnw.cmd verify` com 31 testes, JAR e gate JaCoCo aprovados.
+- `.\mvnw.cmd verify` com 40 testes, JAR e gate JaCoCo aprovados.
 - Nenhum erro de JavaScript no console durante o fluxo principal.
 - Nenhuma rolagem horizontal nas larguras verificadas.
 - Nenhum dado real de cartão no código, na interface ou no armazenamento.
@@ -172,6 +175,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF01.
 - **Tipo:** manual.
+- **Técnica:** Caso de uso e inspeção visual.
 - **Pré-condições:** abrir `index.html`.
 - **Passos:** conferir título, hero, chamada para o menu, seção “Como funciona” e
   rodapé; clicar nos links de navegação; retornar à página inicial.
@@ -183,6 +187,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF02.
 - **Tipo:** manual.
+- **Técnica:** Partição de equivalência e inspeção visual.
 - **Pré-condições:** abrir `menu.html` e aguardar o carregamento simulado.
 - **Passos:** conferir a quantidade de cards, nomes, categorias, descrições e preços.
 - **Dados:** seis bebidas cadastradas em `js/dados.js`.
@@ -193,6 +198,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF03.
 - **Tipo:** manual.
+- **Técnica:** Transição de estados.
 - **Pré-condições:** abrir o catálogo normal.
 - **Passos:** abrir `menu.html?estado=vazio`; recarregar `menu.html?estado=erro`;
   clicar em “Tentar novamente”.
@@ -204,6 +210,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF02, RNF04.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite e partição de equivalência.
 - **Pré-condições:** executar `node --test tests/dados.test.js`.
 - **Passos:** validar preços e chamar `formatarPreco` com valores válidos e inválidos.
 - **Dados:** `0`, `400`, `750`, `123456`, valores negativos, fracionários e texto.
@@ -213,6 +220,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF04, RNF02.
 - **Tipo:** manual.
+- **Técnica:** Caso de uso e inspeção visual.
 - **Pré-condições:** abrir `menu.html` e selecionar uma bebida.
 - **Passos:** abrir “Ver detalhes”; conferir conteúdo; navegar com `Tab`; pressionar
   `Esc`; reabrir pelo botão de origem.
@@ -224,6 +232,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF05, RNF04.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite e partição de equivalência.
 - **Pré-condições:** executar `node --test tests/detalhes.test.js`.
 - **Passos:** validar quantidades nos limites e calcular o total para preço unitário.
 - **Dados:** quantidades `1` e `10`, preço `400` centavos.
@@ -233,6 +242,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF05.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Valor-limite e partição de equivalência.
 - **Pré-condições:** abrir detalhes ou executar os testes de detalhes.
 - **Passos:** informar `0`, `11`, `1.5` e texto não numérico; tentar calcular/adicionar.
 - **Dados:** valores fora do intervalo e não numéricos.
@@ -243,6 +253,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF06, RNF05.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Caso de uso e teste de persistência.
 - **Pré-condições:** catálogo carregado e carrinho vazio.
 - **Passos:** abrir detalhes, escolher quantidade 2, clicar em “Adicionar ao pedido”;
   conferir o resumo; recarregar `pedidos.html`.
@@ -254,6 +265,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF07.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite e partição de equivalência.
 - **Pré-condições:** executar `tests/carrinho.test.js`.
 - **Passos:** adicionar 2, depois 3 unidades da mesma bebida; tentar ultrapassar 10.
 - **Dados:** quantidades `2`, `3` e `6`.
@@ -264,6 +276,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF08.
 - **Tipo:** manual.
+- **Técnica:** Inspeção visual e caso de uso.
 - **Pré-condições:** adicionar bebidas ao carrinho.
 - **Passos:** retornar ao menu e conferir o resumo; clicar no link do pedido.
 - **Dados:** 3 Espressos e 2 Cafés com Leite.
@@ -274,6 +287,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF09.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Caso de uso e partição de equivalência.
 - **Pré-condições:** carrinho com pelo menos dois itens.
 - **Passos:** alterar a quantidade de um item; conferir subtotal/total; remover o item;
   remover todos os itens.
@@ -285,6 +299,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF10.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Caso de uso e partição de equivalência.
 - **Pré-condições:** carrinho vazio.
 - **Passos:** abrir `pedidos.html` e tentar concluir; chamar a regra de domínio.
 - **Dados:** carrinho `{ itens: [] }`.
@@ -295,6 +310,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF11.
 - **Tipo:** manual.
+- **Técnica:** Caso de uso e inspeção visual.
 - **Pré-condições:** carrinho com item e quantidade válida.
 - **Passos:** clicar em “Concluir pedido” sem selecionar pagamento.
 - **Dados:** carrinho com Espresso Curto.
@@ -305,6 +321,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF11, RNF06.
 - **Tipo:** manual.
+- **Técnica:** Partição de equivalência e inspeção visual.
 - **Pré-condições:** abrir o resumo do carrinho.
 - **Passos:** conferir as opções e os textos; inspecionar os campos do formulário.
 - **Dados:** rótulos “Dinheiro” e “Cartão fictício”.
@@ -315,6 +332,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF12.
 - **Tipo:** manual.
+- **Técnica:** Caso de uso.
 - **Pré-condições:** carrinho válido e pagamento “Dinheiro” selecionado.
 - **Passos:** concluir o pedido; conferir a confirmação; abrir o histórico.
 - **Dados:** 2 Espressos, total `R$ 8,00`.
@@ -325,6 +343,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF12, RNF05.
 - **Tipo:** manual.
+- **Técnica:** Análise de risco e teste de falha.
 - **Pré-condições:** carrinho válido e armazenamento local indisponível ou simulado
   como falha.
 - **Passos:** selecionar pagamento e tentar concluir.
@@ -336,6 +355,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF13.
 - **Tipo:** manual.
+- **Técnica:** Caso de uso e teste de persistência.
 - **Pré-condições:** pedido confirmado em CT15.
 - **Passos:** recarregar `pedidos.html`; conferir histórico e carrinho.
 - **Dados:** pedido salvo no `localStorage`.
@@ -346,6 +366,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF13.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Partição de equivalência e inspeção visual.
 - **Pré-condições:** sem histórico ou com dois pedidos de datas diferentes.
 - **Passos:** abrir o histórico vazio; salvar dois pedidos; recarregar.
 - **Dados:** pedidos `PED-00000001` e `PED-00000002`.
@@ -356,6 +377,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF13.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência e teste de robustez.
 - **Pré-condições:** executar `tests/historico.test.js`.
 - **Passos:** carregar JSON inválido, objeto sem lista, item com total divergente,
   status inválido e número duplicado.
@@ -367,6 +389,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF13, RNF01.
 - **Tipo:** manual.
+- **Técnica:** Inspeção visual e responsividade.
 - **Pré-condições:** histórico com pelo menos um pedido.
 - **Passos:** abrir `pedidos.html` em 390, 768 e 1366 px; rolar até o histórico;
   conferir cards, botão de limpar e seletor de status.
@@ -378,6 +401,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF14.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Transição de estados.
 - **Pré-condições:** histórico com um pedido.
 - **Passos:** alterar de “Recebido” para “Em preparo” e depois “Finalizado”; recarregar.
 - **Dados:** os três status permitidos.
@@ -388,6 +412,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF14.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência e teste de erro.
 - **Pré-condições:** executar `tests/historico.test.js`.
 - **Passos:** tentar alterar para status desconhecido e para número inexistente.
 - **Dados:** `cancelado` e `PED-inexistente`.
@@ -397,6 +422,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF15.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Caso de uso e transição de estados.
 - **Pré-condições:** histórico com um pedido.
 - **Passos:** abrir “Limpar histórico”; clicar em “Cancelar”; repetir e confirmar.
 - **Dados:** um pedido salvo.
@@ -407,6 +433,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF01, RNF09.
 - **Tipo:** manual.
+- **Técnica:** Inspeção visual e responsividade.
 - **Pré-condições:** abrir as quatro páginas no navegador.
 - **Passos:** verificar 390, 768 e 1366 px; conferir menu, cards, formulário, histórico,
   botões e contraste.
@@ -418,6 +445,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF02, RNF03.
 - **Tipo:** manual.
+- **Técnica:** Inspeção visual e acessibilidade.
 - **Pré-condições:** abrir `menu.html` e `pedidos.html`.
 - **Passos:** percorrer o fluxo usando apenas `Tab`, `Shift+Tab`, `Enter` e `Esc`;
   conferir foco, rótulos e mensagens; inspecionar `aria-live`.
@@ -429,6 +457,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF03, RNF07, RNF08, RNF10.
 - **Tipo:** automatizado/estático.
+- **Técnica:** Análise estática.
 - **Pré-condições:** Node.js e navegador disponíveis.
 - **Passos:** executar `npm test`, `node --check` nos JavaScripts, checagem de IDs e
   links, `git diff --check` e abrir as páginas por `file://`.
@@ -440,6 +469,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF16.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Teste de contrato e caso de uso.
 - **Pré-condições:** backend iniciado com H2 e carga inicial concluída.
 - **Passos:** executar `GET /api/bebidas`; consultar `GET /api/bebidas/espresso-curto`;
   consultar um id inexistente.
@@ -451,6 +481,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF17.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência e teste de erro.
 - **Pré-condições:** executar `BebidaControllerIntegrationTest`.
 - **Passos:** enviar uma bebida nova; repetir o mesmo id.
 - **Dados:** id `cha-verde-teste`, preço `525` centavos.
@@ -461,6 +492,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF19.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite e partição de equivalência.
 - **Pré-condições:** executar `BebidaControllerIntegrationTest`.
 - **Passos:** enviar id com formato inválido, nome vazio, descrição vazia, categoria
   vazia e preço negativo.
@@ -471,6 +503,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF18.
 - **Tipo:** automatizado.
+- **Técnica:** Caso de uso e teste de erro.
 - **Pré-condições:** executar `BebidaControllerIntegrationTest`.
 - **Passos:** atualizar uma bebida; excluir uma bebida temporária; repetir as
   operações com id inexistente.
@@ -482,6 +515,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF20, RF21, RNF15.
 - **Tipo:** automatizado e manual.
+- **Técnica:** Caso de uso e teste de cálculo.
 - **Pré-condições:** backend iniciado e bebidas carregadas.
 - **Passos:** enviar `POST /api/pedidos` com 2 Espressos e 1 Cappuccino; conferir o
   corpo da resposta.
@@ -493,6 +527,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF22.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar pedido com pagamento `pix`.
 - **Dados:** um item válido e pagamento desconhecido.
@@ -502,6 +537,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF22.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar pedido com lista `itens` vazia.
 - **Dados:** `itens: []`.
@@ -511,6 +547,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF22.
 - **Tipo:** automatizado.
+- **Técnica:** Valor-limite.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar pedidos com quantidade `0` e `11`.
 - **Dados:** uma bebida por pedido.
@@ -520,6 +557,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF22.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar pedido com id inexistente; criar pedido com a mesma bebida duas
   vezes.
@@ -530,6 +568,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF23.
 - **Tipo:** automatizado.
+- **Técnica:** Transição de estados e partição de equivalência.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar pedidos; consultar por número; alterar status para `em-preparo`;
   filtrar por status; tentar status inválido.
@@ -541,6 +580,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF24.
 - **Tipo:** automatizado.
+- **Técnica:** Caso de uso e transição de estados.
 - **Pré-condições:** executar `PedidoControllerIntegrationTest`.
 - **Passos:** criar e excluir um pedido; limpar todos os pedidos; consultar a lista.
 - **Dados:** dois pedidos criados.
@@ -551,6 +591,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF14.
 - **Tipo:** contrato.
+- **Técnica:** Teste de contrato.
 - **Pré-condições:** API em execução e Newman disponível.
 - **Passos:** executar a coleção com o ambiente local; conferir as assertions de
   status, campos e totais.
@@ -563,11 +604,12 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF11, RNF12, RNF13.
 - **Tipo:** automatizado/estático.
+- **Técnica:** Análise estática e teste de build.
 - **Pré-condições:** Java instalado e pasta `backend/`.
 - **Passos:** executar `.\mvnw.cmd -v`, `.\mvnw.cmd verify` e
   `.\mvnw.cmd -DskipTests package`; conferir o perfil H2 e o arquivo PostgreSQL.
 - **Dados:** Maven Wrapper 3.9.9; Spring Boot 3.4.5; H2 em memória.
-- **Resultado esperado:** wrapper funcional, 31 testes aprovados, JAR gerado,
+- **Resultado esperado:** wrapper funcional, 40 testes aprovados, JAR gerado,
   JaCoCo dentro do gate, `application-postgres.properties` presente e H2 no perfil
   padrão.
 
@@ -575,6 +617,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF25, RF29, RNF16, RNF20.
 - **Tipo:** automatizado.
+- **Técnica:** Partição de equivalência e teste de falha.
 - **Pré-condições:** executar `node --test tests/api.test.js`.
 - **Passos:** normalizar bebidas e pedidos; listar catálogo; criar pedido; listar
   pedidos com filtro; alterar status; limpar histórico; simular erro HTTP, falha de
@@ -587,6 +630,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF25, RNF20.
 - **Tipo:** integração manual/automatizada (E2E temporário).
+- **Técnica:** Teste de integração e teste de fallback.
 - **Pré-condições:** API iniciada; abrir `menu.html` por `file://` no Edge via CDP.
 - **Passos:** abrir o menu com a API ativa; conferir badge e cards; encerrar a API;
   recarregar a página; conferir badge, catálogo e mensagem de fallback; observar o
@@ -599,6 +643,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF26, RF27, RNF20.
 - **Tipo:** integração manual/automatizada (E2E temporário).
+- **Técnica:** Teste de integração e transição de estados.
 - **Pré-condições:** API iniciada e carrinho local com 2 Espressos.
 - **Passos:** abrir `pedidos.html`; conferir badge `API`; concluir com pagamento
   “Dinheiro”; conferir número/total; alterar status para “Em preparo”; recarregar;
@@ -612,6 +657,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF28, RNF19.
 - **Tipo:** automatizado.
+- **Técnica:** Teste de integração.
 - **Pré-condições:** executar `CorsIntegrationTest`.
 - **Passos:** enviar requisição para `/api/**` com `Origin: null`; conferir os
   cabeçalhos de resposta.
@@ -623,17 +669,19 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF17.
 - **Tipo:** automatizado/estrutural.
+- **Técnica:** Análise de cobertura estrutural.
 - **Pré-condições:** executar `.\mvnw.cmd verify` em `backend/`.
 - **Passos:** rodar os testes, gerar o relatório JaCoCo e conferir o gate de linhas
   e branches; inspecionar o XML/HTML do relatório.
-- **Dados:** 31 testes; limite de 80% de linhas e 50% de branches.
-- **Resultado esperado:** build aprovado, `263` linhas cobertas e `18` perdidas
-  (93,59%), branches em 62,50%, acima dos limites.
+- **Dados:** 40 testes; limite de 80% de linhas e 50% de branches.
+- **Resultado esperado:** build aprovado, `265` linhas cobertas e `16` perdidas
+  (94,31%), branches em 70%, acima dos limites.
 
 ### CT45 — PostgreSQL via Compose e persistência após reinício
 
 - **Requisito:** RF30, RNF12, RNF21.
 - **Tipo:** integração de infraestrutura.
+- **Técnica:** Teste de integração de persistência.
 - **Pré-condições:** Docker em execução; portas livres; `docker compose up -d`.
 - **Passos:** conferir healthcheck; iniciar o backend com perfil `postgres`; listar
   6 bebidas; criar um pedido; reiniciar a API; consultar o pedido; limpar o
@@ -646,6 +694,7 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RF31, RNF18.
 - **Tipo:** estático, execução local dos comandos e execução remota no CI.
+- **Técnica:** Análise estática e teste de CI.
 - **Pré-condições:** arquivo `.github/workflows/ci.yml` presente.
 - **Passos:** validar o YAML; conferir jobs de front-end, backend e contrato;
   repetir localmente `npm test`, `.\mvnw.cmd verify` e Newman; conferir os caminhos
@@ -662,13 +711,31 @@ a evidência e atualizar o relatório.
 
 - **Requisito:** RNF07, RNF10, RNF13.
 - **Tipo:** regressão/estático.
+- **Técnica:** Teste de regressão e inspeção documental.
 - **Pré-condições:** código e documentos atualizados da Etapa 8.
 - **Passos:** executar `npm test`, `.\mvnw.cmd verify` e Newman; conferir README,
   requisitos, plano, relatório e progresso; procurar referências obsoletas a
   “integração futura” e “CI não implementado”.
-- **Dados:** 65 testes front-end, 31 backend e 18 requisições Newman.
-- **Resultado esperado:** 96 testes automatizados aprovados, contrato sem falhas e
+- **Dados:** 65 testes front-end, 40 backend e 18 requisições Newman.
+- **Resultado esperado:** 105 testes automatizados aprovados, contrato sem falhas e
   documentação coerente com o estado real.
+
+### CT48 - Testes unitários e execução por Docker Compose
+
+- **Requisito:** RNF13, RNF18.
+- **Tipo:** automatizado e infraestrutura.
+- **Técnica:** Partição de equivalência, valor-limite e teste de ambiente.
+- **Pré-condições:** Docker em execução; portas livres.
+- **Passos:** executar `.\mvnw.cmd test` em `backend/`; executar `npm test` na raiz;
+  executar `docker compose --profile testes run --rm testes-backend` e
+  `docker compose --profile testes run --rm testes-frontend`; conferir que os
+  testes não exigem banco externo nem configuração manual.
+- **Dados:** 9 testes unitários de `PedidoService` com Mockito; H2 em memória;
+  perfil Compose `testes`.
+- **Resultado esperado:** 40 testes backend e 65 front-end aprovados, com AAA
+  explícito nos testes unitários e valores-limite `0`, `1`, `10` e `11`.
+- **Resultado obtido:** 40 testes backend, 65 front-end e os dois serviços do
+  perfil `testes` concluídos com sucesso.
 
 ## 9. Rastreabilidade resumida
 
@@ -690,21 +757,22 @@ a evidência e atualizar o relatório.
 | PostgreSQL e persistência | RF30, RNF12, RNF21 | CT45 |
 | CI e artefatos | RF31, RNF18 | CT46 |
 | Regressão e documentação | RNF07, RNF10, RNF13 | CT47 |
+| Testes unitários e Compose | RNF13, RNF18 | CT48 |
 
 ## 10. Métricas e aprovação
 
-- **Casos planejados:** 47 (39 anteriores + 8 da Etapa 8).
+- **Casos planejados:** 48 (39 anteriores + 8 da Etapa 8 + 1 de adequação à rubrica).
 - **Com suporte automatizado no front-end:** CT04, CT06, CT07, CT08, CT09, CT11,
   CT12, CT18, CT19, CT21, CT22, CT23, CT26, CT40 e CT47.
-- **Com suporte automatizado no backend:** CT27 a CT39, CT43, CT44 e CT47
+- **Com suporte automatizado no backend:** CT27 a CT39, CT43, CT44, CT47 e CT48
   (CT38 via Newman).
 - **Contrato Postman/Newman:** CT38 (18 requisições e 32 assertions).
 - **Integração/E2E:** CT41 e CT42 (script temporário via CDP no Edge).
-- **Infraestrutura:** CT45 (PostgreSQL/Compose) e CT46 (CI/YAML, comandos locais e
-  execução remota).
+- **Infraestrutura:** CT45 (PostgreSQL/Compose), CT46 (CI/YAML, comandos locais e
+  execução remota) e CT48 (testes via perfil Compose).
 - **Verificação manual obrigatória:** CT01, CT02, CT03, CT05, CT10, CT13 a CT17,
   CT20, CT24 e CT25.
-- **Aprovação:** todos os casos críticos aprovados, 65 testes do front-end, 31
+- **Aprovação:** todos os casos críticos aprovados, 65 testes do front-end, 40
   testes do backend e 18 requisições Newman aprovadas; cobertura acima do gate;
   ausência de erro no console, de rolagem horizontal nas larguras alvo e de dados
   reais de cartão.
