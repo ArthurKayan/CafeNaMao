@@ -1,11 +1,12 @@
 # PROGRESSO — Café na Mão
 
 **Última atualização:** 13/11/2026
-**Status:** Etapas 1 a 8 concluídas e validadas no GitHub Actions. Adequação à
-rubrica implementada; falta a validação final e o novo push.
-**Git:** commits `6e9a544` (`feat: implementa etapa 8`) e `b9821d6`
-(`docs: registra CI aprovado da etapa 8`) enviados para `origin/main`. Os ajustes
-de rubrica desta rodada ainda não foram commitados.
+**Status:** Etapas 1 a 8 concluídas e adequação à rubrica implementada e validada
+localmente e no GitHub Actions.
+**Git:** commits `6e9a544` (`feat: implementa etapa 8`), `b9821d6`
+(`docs: registra CI aprovado da etapa 8`) e `f9d256e`
+(`test: adiciona unitários e perfil de testes no Compose`) enviados para
+`origin/main`.
 
 Este arquivo registra o estado real do projeto, as decisões tomadas, as verificações
 executadas, as pendências e o próximo passo. Para retomar, leia também
@@ -218,11 +219,12 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 - `backend/Dockerfile` e `backend/.dockerignore` criados para execução em containers.
 - README ampliado com comandos de Compose e seção `Uso de IA`.
 - `docs/roteiro-apresentacao.md` criado para apoiar a demonstração e as perguntas.
+- Commit `f9d256e` enviado; CI e Pages aprovados no run
+  [43435010582](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43435010582).
 
 ## 5. Tarefas pendentes
 
-- Fazer a validação final, o commit e o push dos ajustes de rubrica; depois conferir
-  o novo workflow no GitHub Actions.
+- Nenhuma pendência obrigatória da rubrica.
 - Versionar um teste E2E estável, se isso for autorizado; a avaliação da Etapa 8
   concluiu que o roteiro temporário é suficiente para o escopo atual.
 - Ampliar a matriz de navegadores e a verificação de acessibilidade.
@@ -275,8 +277,7 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 ## 8. Próximo passo recomendado
 
-A Etapa 8 está encerrada e a adequação à rubrica foi implementada. O próximo passo é
-rodar as validações finais, commitar e enviar os ajustes autorizados pelo usuário e
-confirmar o novo workflow no GitHub Actions. Depois disso, a entrega estará fechada;
+A Etapa 8 está encerrada e a adequação à rubrica foi implementada, validada
+localmente, commitada e aprovada no GitHub Actions. A entrega está fechada;
 E2E versionado, matriz de navegadores e CORS de produção continuam fora do escopo
-atual.
+atual. Qualquer nova etapa depende de autorização explícita.

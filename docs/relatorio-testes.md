@@ -253,8 +253,10 @@ Bash fora do runner:
 | Log temporário | Removido |
 | GitHub Actions | Front-end, Backend e cobertura e Contrato Postman/Newman aprovados |
 
-O workflow foi executado no GitHub Actions em 13/11/2026 (run
-[43422700883](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883)),
+O workflow foi executado no GitHub Actions em 13/11/2026. A Etapa 8 passou no run
+[43422700883](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883) e
+os ajustes finais de rubrica passaram no run
+[43435010582](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43435010582),
 com os três jobs concluídos com sucesso.
 
 ### 5.5 Execução das suítes via Docker Compose
