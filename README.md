@@ -5,8 +5,9 @@ simula o fluxo de escolher uma bebida, montar o carrinho, pagar de forma fictíc
 confirmar o pedido e acompanhar o histórico. O front-end é estático e o backend é
 uma API REST em Java/Spring Boot.
 
-**Status atual:** Etapas 1 a 8 concluídas. O front-end consome a API quando ela está
-disponível e mantém fallback local por `file://`. O backend usa H2 em memória por
+**Status atual:** Etapas 1 a 8 concluídas e CI aprovado. O front-end consome a API
+quando ela está disponível e mantém fallback local por `file://`. O backend usa H2
+em memória por
 padrão, tem perfil PostgreSQL com Docker Compose, cobertura JaCoCo e validação por
 GitHub Actions.
 
@@ -290,8 +291,9 @@ não foram versionados.
    encerramento do processo Java ao final.
 
 O arquivo foi validado como YAML e o job de contrato foi reproduzido localmente
-com Git Bash: 18 requisições, 32 assertions e porta 8080 liberada. O workflow
-ainda não foi executado no GitHub Actions.
+com Git Bash: 18 requisições, 32 assertions e porta 8080 liberada. O workflow foi
+executado no GitHub Actions em 13/11/2026 e os três jobs passaram (run
+[43422700883](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883)).
 
 ## Documentação
 
@@ -321,7 +323,6 @@ navegação por teclado, `aria-live` para mensagens e suporte a
   progressão automática de status.
 - Não há testes de DOM/E2E versionados nem matriz de navegadores. A integração foi
   conferida com script temporário via CDP no Edge.
-- O workflow de CI ainda não foi executado no GitHub Actions.
 - Não há integração física com a máquina de bebidas.
 
 ## Uso de IA
@@ -335,5 +336,5 @@ resultados.
 ## Próximos passos
 
 As próximas etapas dependem de autorização explícita. Candidatos: versionar um teste
-E2E estável, executar o workflow no GitHub Actions, ampliar acessibilidade e revisar
-a configuração para um ambiente publicado.
+E2E estável, ampliar acessibilidade e revisar a configuração para um ambiente
+publicado.

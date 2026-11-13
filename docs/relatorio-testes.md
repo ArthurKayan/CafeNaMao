@@ -22,6 +22,8 @@ cobertura, CI e documentação.
   reiniciar a API.
 - Workflow de CI validado como YAML; job de contrato reproduzido localmente com
   18 requisições, 32 assertions e encerramento da API.
+- Workflow executado no GitHub Actions com os três jobs aprovados (run
+  43422700883).
 - Página Sobre conferida em 390, 768 e 1366 px, sem rolagem horizontal.
 - Verificação de sintaxe e `git diff --check` aprovados após ajuste de espaços.
 
@@ -216,7 +218,7 @@ O PostgreSQL nativo ocupava a porta 5432 e causou falha de autenticação no
 primeiro teste. A porta host padrão do Compose e do perfil `postgres` foi alterada
 para 5433.
 
-### 5.4 CI em simulação local
+### 5.4 CI local e GitHub Actions
 
 O job de contrato foi ajustado para iniciar a API, aguardar `GET /api/bebidas`,
 executar o Newman e encerrar o Java na mesma etapa. O fluxo foi repetido com Git
@@ -229,8 +231,11 @@ Bash fora do runner:
 | Newman | 18 requisições, 32 assertions, 0 falhas |
 | Encerramento da API | Porta 8080 liberada |
 | Log temporário | Removido |
+| GitHub Actions | Front-end, Backend e cobertura e Contrato Postman/Newman aprovados |
 
-A execução no GitHub Actions depende de commit/push e continua pendente.
+O workflow foi executado no GitHub Actions em 13/11/2026 (run
+[43422700883](https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883)),
+com os três jobs concluídos com sucesso.
 
 ## 6. Situação dos casos planejados
 
@@ -244,7 +249,7 @@ A execução no GitHub Actions depende de commit/push e continua pendente.
 | CT43 | Aprovado | `CorsIntegrationTest` com `Origin: null` |
 | CT44 | Aprovado | JaCoCo: 93,59% linhas e 62,50% branches |
 | CT45 | Aprovado | PostgreSQL via Compose e persistência após reinício |
-| CT46 | Aprovado | YAML válido e job de contrato reproduzido localmente com 18/32 |
+| CT46 | Aprovado | YAML válido, job local com 18/32 e três jobs aprovados no GitHub Actions |
 | CT47 | Aprovado | 65 + 31 testes, Newman e documentação revisada |
 
 ## 7. Limitações e lacunas
@@ -254,8 +259,8 @@ A execução no GitHub Actions depende de commit/push e continua pendente.
 - A verificação de navegador foi feita apenas no Edge, sem matriz de navegadores.
 - Não há leitor de tela real na validação; acessibilidade foi conferida por foco,
   teclado, rótulos, semântica e regiões `aria-live`.
-- O workflow de CI foi validado localmente, inclusive o job de contrato, mas ainda
-  não foi executado no GitHub Actions.
+- O workflow de CI passou no GitHub Actions, mas não há matriz de sistemas
+  operacionais nem de versões do Node/Java.
 - O CORS amplo para `Origin: null` é adequado ao desenvolvimento por `file://`, não
   a uma implantação pública.
 - O fallback local e a API não são sincronizados automaticamente; dados locais e
@@ -267,17 +272,16 @@ A execução no GitHub Actions depende de commit/push e continua pendente.
 
 ## 8. Próximos passos recomendados
 
-1. Com autorização, fazer commit/push para executar o workflow no GitHub Actions.
-2. Versionar um teste E2E estável para o fluxo principal, se isso for autorizado.
-3. Ampliar acessibilidade e a matriz de navegadores.
-4. Revisar CORS e configuração para um eventual ambiente publicado.
-5. Atualizar plano, relatório e `progresso.md` a cada nova etapa.
+1. Versionar um teste E2E estável para o fluxo principal, se isso for autorizado.
+2. Ampliar acessibilidade e a matriz de navegadores.
+3. Revisar CORS e configuração para um eventual ambiente publicado.
+4. Atualizar plano, relatório e `progresso.md` a cada nova etapa.
 
 ## 9. Conclusão
 
-As Etapas 1 a 8 estão concluídas localmente. O front-end funciona por `file://`,
-consome a API quando disponível e mantém fallback local. A suíte tem 65 testes de
-front-end e 31 de backend, a cobertura atende ao gate JaCoCo, o contrato Newman
-passa, o PostgreSQL via Compose preserva dados, o job de contrato foi reproduzido
-localmente e a página Sobre foi revisada. A execução remota do CI e os testes E2E
-versionados permanecem como próximos passos.
+As Etapas 1 a 8 estão concluídas e validadas no CI. O front-end funciona por
+`file://`, consome a API quando disponível e mantém fallback local. A suíte tem 65
+testes de front-end e 31 de backend, a cobertura atende ao gate JaCoCo, o contrato
+Newman passa, o PostgreSQL via Compose preserva dados, o workflow foi aprovado no
+GitHub Actions e a página Sobre foi revisada. Os testes E2E versionados permanecem
+como próximo passo.

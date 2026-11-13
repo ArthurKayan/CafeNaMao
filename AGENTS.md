@@ -76,7 +76,7 @@ docker compose down
 ### Infraestrutura e CI
 
 - `compose.yaml` — PostgreSQL 16 Alpine, healthcheck, volume e porta host configurável.
-- `.github/workflows/ci.yml` — jobs de front-end, backend/JaCoCo e contrato Newman. O workflow foi validado localmente como YAML, mas ainda não foi executado no GitHub Actions.
+- `.github/workflows/ci.yml` — jobs de front-end, backend/JaCoCo e contrato Newman. O workflow passou no GitHub Actions em 13/11/2026 (run 43422700883).
 - `.github/workflows/ci.yml` publica o relatório JaCoCo e o JAR como artefatos.
 
 ### Regras gerais

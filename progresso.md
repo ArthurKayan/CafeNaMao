@@ -1,9 +1,9 @@
 # PROGRESSO — Café na Mão
 
 **Última atualização:** 13/11/2026
-**Status:** Etapas 1 a 8 concluídas localmente. Execução remota do CI continua
-pendente até haver autorização para commit/push. Próxima etapa ainda não autorizada.
-**Git:** alterações não commitadas; nenhum commit ou push foi feito.
+**Status:** Etapas 1 a 8 concluídas e validadas no GitHub Actions. Próxima etapa
+ainda não autorizada.
+**Git:** commit `6e9a544` (`feat: implementa etapa 8`) enviado para `origin/main`.
 
 Este arquivo registra o estado real do projeto, as decisões tomadas, as verificações
 executadas, as pendências e o próximo passo. Para retomar, leia também
@@ -158,7 +158,7 @@ larguras 390, 768 e 1366 px:
 - nenhum link quebrado ou `href="#"`;
 - nenhuma rolagem horizontal e nenhum erro de console.
 
-### CI em simulação local
+### CI no GitHub Actions
 
 O job de contrato foi ajustado para iniciar a API, aguardar `GET /api/bebidas`,
 executar o Newman e encerrar o Java na mesma etapa. O fluxo foi repetido com Git
@@ -167,6 +167,15 @@ Bash:
 - 18 requisições e 32 assertions aprovadas, 0 falhas;
 - porta 8080 liberada após o término;
 - arquivo temporário de log removido.
+
+Depois do push do commit `6e9a544`, o workflow foi executado no GitHub Actions e
+concluiu com sucesso:
+
+- Front-end: sucesso;
+- Backend e cobertura: sucesso;
+- Contrato Postman/Newman: sucesso.
+
+Run: https://github.com/ArthurKayan/CafeNaMao/actions/runs/43422700883
 
 ### PostgreSQL
 
@@ -193,15 +202,12 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 ## 5. Tarefas pendentes
 
-- Executar o workflow no GitHub Actions pela primeira vez; isso exige autorização
-  para commit/push e deve ser o primeiro passo da próxima sessão.
 - Versionar um teste E2E estável, se isso for autorizado; a avaliação da Etapa 8
   concluiu que o roteiro temporário é suficiente para o escopo atual.
 - Ampliar a matriz de navegadores e a verificação de acessibilidade.
 - Revisar a configuração de CORS para um eventual ambiente publicado.
 - Atualizar a documentação a cada nova etapa.
 - Definir e autorizar a próxima etapa; não iniciar a Etapa 9 sem pedido explícito.
-- Fazer commit/push somente quando o usuário solicitar.
 
 ## 6. Arquivos modificados e criados
 
@@ -234,7 +240,6 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 ## 7. Limitações conhecidas
 
-- O CI foi validado localmente, mas ainda não rodou no GitHub Actions.
 - Não há testes de DOM/E2E versionados; o E2E foi temporário.
 - A verificação de interface foi feita apenas no Edge.
 - O CORS com `Origin: null` é adequado ao desenvolvimento local, não à produção.
@@ -246,7 +251,7 @@ Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
 ## 8. Próximo passo recomendado
 
-A Etapa 8 está encerrada localmente: integração, testes, cobertura, PostgreSQL,
-CI, E2E e revisão visual foram concluídos e documentados. Para validar o CI no
-GitHub Actions, peça autorização explícita para commit/push. Depois disso, definir
-o escopo da Etapa 9. Não fazer commit ou push sem solicitação explícita.
+A Etapa 8 está encerrada: integração, testes, cobertura, PostgreSQL, CI, E2E e
+revisão visual foram concluídos e documentados, e o workflow passou no GitHub
+Actions. O próximo passo é definir e autorizar o escopo da Etapa 9. Não fazer novos
+commits ou pushes sem solicitação explícita.

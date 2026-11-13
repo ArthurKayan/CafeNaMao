@@ -66,7 +66,7 @@ demonstrar práticas de Garantia de Qualidade de Software.
 | RF28 | Permitir chamadas de páginas `file://` à API. | Respostas CORS para `/api/**` aceitam `Origin: null`, métodos e cabeçalhos usados pelo front-end. | Implementado |
 | RF29 | Tratar timeout e erros da API no cliente. | `js/api.js` aplica timeout, converte falhas em `ErroApi` compreensível e preserva mensagens de erro HTTP quando disponíveis. | Implementado |
 | RF30 | Provisionar PostgreSQL para o backend. | `docker compose up -d` sobe PostgreSQL 16 com healthcheck/volume; backend no perfil `postgres` usa a porta host padrão 5433 e persiste os dados. | Implementado |
-| RF31 | Automatizar build e testes em CI. | Workflow do GitHub Actions executa front-end, backend com `verify`/JaCoCo e contrato Newman, publicando relatório e JAR. | Implementado, ainda não executado no GitHub |
+| RF31 | Automatizar build e testes em CI. | Workflow do GitHub Actions executa front-end, backend com `verify`/JaCoCo e contrato Newman, publicando relatório e JAR. | Atendido (run 43422700883) |
 
 ## 5. Requisitos não funcionais
 
@@ -89,7 +89,7 @@ demonstrar práticas de Garantia de Qualidade de Software.
 | RNF15 | Precisão monetária no backend. | Preços e totais usam inteiros em centavos; o servidor recalcula o total. | Atendido |
 | RNF16 | Testes do cliente HTTP e da integração. | 12 testes cobrem normalização, sucesso, erro HTTP, falha de conexão e timeout; E2E confirma os fluxos reais. | Atendido |
 | RNF17 | Cobertura de código no backend. | JaCoCo gera relatório em `verify` e exige mínimo de 80% de linhas e 50% de branches. | Atendido (93,59% linhas e 62,50% branches) |
-| RNF18 | CI reproduzível e com artefatos. | Workflow usa wrappers/versões fixas, falha com comando inválido e publica JaCoCo e JAR. | Configurado; execução remota pendente |
+| RNF18 | CI reproduzível e com artefatos. | Workflow usa wrappers/versões fixas, falha com comando inválido e publica JaCoCo e JAR. | Atendido (3 jobs aprovados no GitHub Actions) |
 | RNF19 | Integração local segura o suficiente para `file://`. | CORS é amplo apenas para `/api/**` em desenvolvimento; não há segredos reais nem autenticação simulada insegura. | Atendido com ressalva |
 | RNF20 | Resiliência da integração. | Timeout configurável, fallback visível para catálogo/histórico e erro explícito na criação de pedido em modo API. | Atendido |
 | RNF21 | Persistência real validada. | Pedido criado no perfil PostgreSQL continua existindo após reiniciar a API; limpeza também persiste. | Atendido |
@@ -140,7 +140,7 @@ demonstrar práticas de Garantia de Qualidade de Software.
 | RF28 | CT43 | `CorsIntegrationTest`. |
 | RF29 | CT40 | `tests/api.test.js` (erro HTTP, conexão e timeout). |
 | RF30 | CT45 | Docker Compose + perfil PostgreSQL + reinício da API. |
-| RF31 | CT46 | Workflow validado como YAML e comandos executados localmente. |
+| RF31 | CT46 | Workflow validado como YAML, executado localmente e aprovado no GitHub Actions. |
 
 ### 7.2 Requisitos não funcionais
 
@@ -163,7 +163,7 @@ demonstrar práticas de Garantia de Qualidade de Software.
 | RNF15 | CT31 | Total em centavos calculado no servidor. |
 | RNF16 | CT40, CT41, CT42 | 12 testes do cliente + E2E real. |
 | RNF17 | CT44 | Relatório JaCoCo e gate no `verify`. |
-| RNF18 | CT46 | `ci.yml` com jobs e artefatos. |
+| RNF18 | CT46 | `ci.yml` com jobs e artefatos; execução remota aprovada. |
 | RNF19 | CT43 | CORS `Origin: null` restrito a `/api/**`. |
 | RNF20 | CT41, CT42 | Fallback e mensagens de erro observados no E2E. |
 | RNF21 | CT45 | Persistência após reinício no PostgreSQL. |
@@ -179,7 +179,8 @@ demonstrar práticas de Garantia de Qualidade de Software.
 5. A cobertura JaCoCo atende ao gate de 80% de linhas e 50% de branches.
 6. O PostgreSQL do Compose fica saudável na porta 5433 e preserva um pedido após
    reiniciar a API.
-7. O workflow de CI é YAML válido e seus comandos foram executados localmente.
+7. O workflow de CI é YAML válido, seus comandos foram executados localmente e os
+   três jobs passaram no GitHub Actions.
 8. A documentação registra integração, evidências, limitações e a próxima etapa.
 9. O front-end continua abrindo por `file://` sem build ou servidor local.
 

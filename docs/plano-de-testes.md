@@ -35,7 +35,6 @@ pedidos, os endpoints da API e a integração entre as camadas.
 - Integração física com a máquina de bebidas.
 - Implantação pública, configuração de produção e testes de carga/segurança ofensiva.
 - Matriz completa de navegadores e suíte E2E versionada nesta etapa.
-- Execução remota do workflow no GitHub Actions nesta sessão.
 
 ## 2. Referências
 
@@ -88,7 +87,7 @@ externos, dados reais de cartão ou de uma máquina física.
 | Cobertura | JaCoCo 0.8.12, gate 80% linhas / 50% branches |
 | Coleção de API | Postman/Newman |
 | Docker | 29.2.1 e Compose v5.1.0 |
-| CI | GitHub Actions configurado; execução remota pendente |
+| CI | GitHub Actions executado e aprovado (run 43422700883) |
 
 ## 5. Dados de teste
 
@@ -134,7 +133,8 @@ externos, dados reais de cartão ou de uma máquina física.
 - API retornando os códigos HTTP previstos para sucesso e erro.
 - Fallback local observado sem perda silenciosa de pedido em modo API.
 - PostgreSQL preservando dados após reiniciar a API.
-- Workflow de CI válido como YAML e comandos executados localmente.
+- Workflow de CI válido como YAML, comandos executados localmente e três jobs
+  aprovados no GitHub Actions.
 
 ### Suspensão
 
@@ -645,16 +645,18 @@ a evidência e atualizar o relatório.
 ### CT46 — Workflow de CI e artefatos
 
 - **Requisito:** RF31, RNF18.
-- **Tipo:** estático e execução local dos comandos.
+- **Tipo:** estático, execução local dos comandos e execução remota no CI.
 - **Pré-condições:** arquivo `.github/workflows/ci.yml` presente.
 - **Passos:** validar o YAML; conferir jobs de front-end, backend e contrato;
   repetir localmente `npm test`, `.\mvnw.cmd verify` e Newman; conferir os caminhos
   dos artefatos JaCoCo e JAR.
 - **Dados:** Node 24, Java 21, Maven Wrapper e coleção Postman existente.
-- **Resultado esperado:** YAML válido, jobs/artefatos coerentes e comandos locais
-  aprovados. A primeira execução no GitHub Actions fica registrada como pendência.
+- **Resultado esperado:** YAML válido, jobs/artefatos coerentes, comandos locais
+  aprovados e workflow concluído com sucesso no GitHub Actions.
 - **Resultado obtido:** job de contrato reproduzido localmente com 18 requisições,
-  32 assertions e 0 falhas; API encerrada e porta 8080 liberada.
+  32 assertions e 0 falhas; API encerrada e porta 8080 liberada. No GitHub Actions,
+  os jobs Front-end, Backend e cobertura e Contrato Postman/Newman passaram
+  (run 43422700883).
 
 ### CT47 — Regressão, documentação e contagens
 
@@ -698,7 +700,8 @@ a evidência e atualizar o relatório.
   (CT38 via Newman).
 - **Contrato Postman/Newman:** CT38 (18 requisições e 32 assertions).
 - **Integração/E2E:** CT41 e CT42 (script temporário via CDP no Edge).
-- **Infraestrutura:** CT45 (PostgreSQL/Compose) e CT46 (CI/YAML e comandos locais).
+- **Infraestrutura:** CT45 (PostgreSQL/Compose) e CT46 (CI/YAML, comandos locais e
+  execução remota).
 - **Verificação manual obrigatória:** CT01, CT02, CT03, CT05, CT10, CT13 a CT17,
   CT20, CT24 e CT25.
 - **Aprovação:** todos os casos críticos aprovados, 65 testes do front-end, 31
