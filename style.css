@@ -606,6 +606,28 @@ a {
   margin-top: auto;
 }
 
+.origem-dados {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 1.5rem;
+  padding: 0.35rem 0.65rem;
+  background-color: var(--cinza);
+  border: 3px solid var(--carvao);
+  box-shadow: var(--sombra-pequena);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.origem-dados[data-modo="api"] {
+  background-color: var(--laranja);
+}
+
+.origem-dados[hidden] {
+  display: none;
+}
+
 .estado {
   display: flex;
   align-items: center;

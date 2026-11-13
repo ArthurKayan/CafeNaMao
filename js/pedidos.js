@@ -5,8 +5,10 @@
   const detalhes = window.CafeNaMaoDetalhes;
   const carrinhoApi = window.CafeNaMaoCarrinho;
   const historicoApi = window.CafeNaMaoHistorico;
+  const api = window.CafeNaMaoApi;
 
   const status = document.getElementById("status-pedido");
+  const origemHistorico = document.getElementById("origem-historico");
   const carrinhoVazio = document.getElementById("carrinho-vazio");
   const carrinhoConteudo = document.getElementById("carrinho-conteudo");
   const lista = document.getElementById("lista-carrinho");
@@ -36,6 +38,7 @@
     !carrinhoApi ||
     !historicoApi ||
     !status ||
+    !origemHistorico ||
     !carrinhoVazio ||
     !carrinhoConteudo ||
     !lista ||
@@ -63,6 +66,10 @@
   }
 
   let carrinho = carrinhoApi.carregarCarrinho();
+  let modoApi = false;
+  let historicoRemoto = [];
+  let enviando = false;
+  let promessaInicial = null;
 
   const formatadorData = new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
@@ -87,6 +94,12 @@
     window.setTimeout(function () {
       statusHistorico.textContent = texto;
     }, 20);
+  }
+
+  function definirOrigemHistorico(texto, modo) {
+    origemHistorico.textContent = texto;
+    origemHistorico.dataset.modo = modo;
+    origemHistorico.hidden = false;
   }
 
   function subtotalItem(item) {
@@ -335,24 +348,56 @@
     pedidoItens.replaceChildren(fragmento);
   }
 
-  function concluirPedido() {
-    const erro = carrinhoApi.validarCarrinhoParaPedido(carrinho);
+  function limparSelecaoPagamento() {
+    pagamentoPedido.querySelectorAll('input[name="pagamento"]').forEach(function (radio) {
+      radio.checked = false;
+    });
+    limparErroPagamento();
+  }
 
-    if (erro) {
-      anunciar(erro);
+  function exibirConfirmacao(registro) {
+    const totalFormatado = dados.formatarPreco(registro.totalCentavos);
+
+    carrinhoApi.limparCarrinhoSalvo();
+    carrinho = carrinhoApi.criarCarrinhoVazio();
+
+    carrinhoConteudo.hidden = true;
+    carrinhoVazio.hidden = true;
+    preencherConfirmacao(registro);
+    confirmacao.hidden = false;
+    confirmacao.focus();
+
+    limparSelecaoPagamento();
+    anunciar(
+      "Pedido " + registro.numero + " confirmado. Total de " + totalFormatado + "."
+    );
+  }
+
+  async function concluirPedidoNaApi(pagamento) {
+    let registro;
+
+    try {
+      registro = await api.criarPedido(pagamento, carrinho.itens);
+    } catch (erroApi) {
+      anunciar(
+        erroApi && erroApi.message
+          ? erroApi.message
+          : "Não foi possível salvar o pedido na API. O carrinho foi mantido."
+      );
       return;
     }
 
-    if (!validarQuantidades()) {
-      return;
-    }
+    historicoRemoto = [registro].concat(
+      historicoRemoto.filter(function (pedido) {
+        return pedido.numero !== registro.numero;
+      })
+    );
 
-    const pagamento = validarPagamento();
+    exibirConfirmacao(registro);
+    renderizarHistorico(historicoRemoto);
+  }
 
-    if (!pagamento) {
-      return;
-    }
-
+  function concluirPedidoLocal(pagamento) {
     let registro;
 
     try {
@@ -374,25 +419,57 @@
       return;
     }
 
-    const totalFormatado = dados.formatarPreco(registro.totalCentavos);
-
-    carrinhoApi.limparCarrinhoSalvo();
-    carrinho = carrinhoApi.criarCarrinhoVazio();
-
-    carrinhoConteudo.hidden = true;
-    carrinhoVazio.hidden = true;
-    preencherConfirmacao(registro);
-    confirmacao.hidden = false;
-    confirmacao.focus();
-
-    pagamentoPedido.querySelectorAll('input[name="pagamento"]').forEach(function (radio) {
-      radio.checked = false;
-    });
-    limparErroPagamento();
+    exibirConfirmacao(registro);
     renderizarHistorico();
-    anunciar(
-      "Pedido " + registro.numero + " confirmado. Total de " + totalFormatado + "."
-    );
+  }
+
+  async function concluirPedido() {
+    if (enviando) {
+      return;
+    }
+
+    if (promessaInicial) {
+      await promessaInicial;
+    }
+
+    const erro = carrinhoApi.validarCarrinhoParaPedido(carrinho);
+
+    if (erro) {
+      anunciar(erro);
+      return;
+    }
+
+    if (!validarQuantidades()) {
+      return;
+    }
+
+    const pagamento = validarPagamento();
+
+    if (!pagamento) {
+      return;
+    }
+
+    if (modoApi && !api) {
+      anunciar("A API não está disponível. Recarregue a página e tente novamente.");
+      return;
+    }
+
+    enviando = true;
+    concluir.disabled = true;
+
+    try {
+      if (modoApi) {
+        await concluirPedidoNaApi(pagamento);
+      } else {
+        concluirPedidoLocal(pagamento);
+      }
+    } finally {
+      enviando = false;
+
+      if (!carrinhoApi.carrinhoVazio(carrinho)) {
+        concluir.disabled = false;
+      }
+    }
   }
 
   function criarItemHistorico(pedido) {
@@ -473,8 +550,12 @@
     return item;
   }
 
-  function renderizarHistorico() {
-    const historico = historicoApi.carregarHistorico();
+  function renderizarHistorico(pedidos) {
+    const historico = Array.isArray(pedidos)
+      ? pedidos
+      : modoApi
+        ? historicoRemoto
+        : historicoApi.carregarHistorico();
 
     if (historico.length === 0) {
       listaHistorico.replaceChildren();
@@ -492,6 +573,29 @@
     listaHistorico.replaceChildren(fragmento);
     historicoVazio.hidden = true;
     limparHistoricoBotao.hidden = false;
+  }
+
+  async function carregarHistoricoRemoto() {
+    const pedidos = await api.listarPedidos();
+    modoApi = true;
+    historicoRemoto = pedidos;
+    definirOrigemHistorico("Histórico sincronizado com a API.", "api");
+    renderizarHistorico(pedidos);
+  }
+
+  async function inicializarHistorico() {
+    listaHistorico.setAttribute("aria-busy", "true");
+
+    try {
+      await carregarHistoricoRemoto();
+    } catch (erroApi) {
+      modoApi = false;
+      historicoRemoto = [];
+      definirOrigemHistorico("API indisponível — usando histórico local.", "local");
+      renderizarHistorico();
+    } finally {
+      listaHistorico.setAttribute("aria-busy", "false");
+    }
   }
 
   function abrirDialogoLimpeza() {
@@ -512,22 +616,36 @@
     dialogoLimpar.removeAttribute("open");
   }
 
-  function limparTodoOHistorico() {
-    const limpou = historicoApi.limparHistorico();
+  async function limparTodoOHistorico() {
+    confirmarLimpeza.disabled = true;
 
-    fecharDialogoLimpeza();
-
-    if (!limpou) {
-      anunciarHistorico("Não foi possível limpar o histórico de pedidos.");
+    try {
+      if (modoApi) {
+        await api.limparPedidos();
+        historicoRemoto = [];
+        historicoApi.limparHistorico();
+      } else if (!historicoApi.limparHistorico()) {
+        anunciarHistorico("Não foi possível limpar o histórico de pedidos.");
+        return;
+      }
+    } catch (erroApi) {
+      anunciarHistorico(
+        erroApi && erroApi.message
+          ? erroApi.message
+          : "Não foi possível limpar o histórico de pedidos."
+      );
       return;
+    } finally {
+      confirmarLimpeza.disabled = false;
     }
 
+    fecharDialogoLimpeza();
     renderizarHistorico();
     tituloHistorico.focus();
     anunciarHistorico("Histórico de pedidos limpo.");
   }
 
-  function tratarMudancaStatus(evento) {
+  async function tratarMudancaStatus(evento) {
     const selecao = evento.target.closest("select[data-status-numero]");
 
     if (!selecao) {
@@ -535,26 +653,39 @@
     }
 
     const numero = selecao.getAttribute("data-status-numero");
-    const novoStatus = selecao.value;
     const item = selecao.closest(".historico__pedido");
     const statusAnterior = item ? item.dataset.status : "";
+    let statusAplicado = selecao.value;
+    selecao.disabled = true;
 
-    if (!historicoApi.alterarStatus(numero, novoStatus)) {
+    try {
+      if (modoApi) {
+        const atualizado = await api.alterarStatus(numero, statusAplicado);
+        statusAplicado = atualizado.status;
+        historicoRemoto = historicoRemoto.map(function (pedido) {
+          return pedido.numero === numero ? atualizado : pedido;
+        });
+      } else if (!historicoApi.alterarStatus(numero, statusAplicado)) {
+        throw new Error("Status não atualizado.");
+      }
+    } catch (erroApi) {
       if (item) {
         selecao.value = statusAnterior;
       }
 
       anunciarHistorico("Não foi possível atualizar o status do pedido " + numero + ".");
       return;
+    } finally {
+      selecao.disabled = false;
     }
 
     if (item) {
-      item.dataset.status = novoStatus;
+      item.dataset.status = statusAplicado;
 
       const rotulo = item.querySelector("[data-status-rotulo]");
 
       if (rotulo) {
-        rotulo.textContent = historicoApi.rotuloStatus(novoStatus);
+        rotulo.textContent = historicoApi.rotuloStatus(statusAplicado);
       }
     }
 
@@ -562,7 +693,7 @@
       "Pedido " +
         numero +
         ": status atualizado para " +
-        historicoApi.rotuloStatus(novoStatus) +
+        historicoApi.rotuloStatus(statusAplicado) +
         "."
     );
   }
@@ -600,14 +731,15 @@
   window.addEventListener("pageshow", function (evento) {
     if (evento.persisted) {
       carrinho = carrinhoApi.carregarCarrinho();
-      renderizarHistorico();
 
       if (confirmacao.hidden) {
         renderizarCarrinho();
       }
+
+      promessaInicial = inicializarHistorico();
     }
   });
 
-  renderizarHistorico();
   renderizarCarrinho();
+  promessaInicial = inicializarHistorico();
 })();

@@ -1,617 +1,252 @@
 # PROGRESSO — Café na Mão
 
-Última atualização: 10/11/2026
-Última atualização: 10/11/2026
+**Última atualização:** 13/11/2026
+**Status:** Etapas 1 a 8 concluídas localmente. Execução remota do CI continua
+pendente até haver autorização para commit/push. Próxima etapa ainda não autorizada.
+**Git:** alterações não commitadas; nenhum commit ou push foi feito.
 
-Status atual: **Etapas 1 a 7 concluídas. Próxima etapa: Etapa 8 — integração do front-end com a API, cobertura e infraestrutura (aguardando autorização).**
+Este arquivo registra o estado real do projeto, as decisões tomadas, as verificações
+executadas, as pendências e o próximo passo. Para retomar, leia também
+`projeto 1/.agents/skills/cafenamao/SKILL.md`.
 
-Este arquivo registra o estado real do projeto, as decisões tomadas, os testes executados e o próximo passo. Uma nova sessão deve conseguir continuar a partir dele, lendo também `projeto 1/.agents/skills/cafenamao/SKILL.md`.
+## 1. Visão atual
 
-## Histórico do registro
+O Café na Mão é uma aplicação acadêmica de pedidos de bebidas. O front-end é
+estático, abre por `file://` e não exige build, servidor local ou dependências npm.
+O backend é uma API REST Java/Spring Boot.
 
-O registro anterior (commit `c359b67`) foi preservado e ampliado. Ele documentava:
+Desde a Etapa 8:
 
-- primeira etapa de desenvolvimento realizada com auxílio do OpenCode;
-- front-end inicial com `index.html`, `menu.html`, `pedidos.html`, `sobre.html` e `style.css`;
-- projeto versionado no GitHub;
-- ferramentas usadas: VS Code, OpenCode, DeepSeek v4.1 Flash, HTML, CSS, JavaScript, Git e GitHub;
-- orientação para trabalhar em etapas, explicar em português, testar e não avançar sem autorização.
+- o catálogo tenta a API e usa `js/dados.js` como fallback;
+- pedidos, histórico, status e limpeza usam a API quando a sincronização inicial
+  funciona;
+- sem API, o front-end continua em modo local com aviso visível;
+- falha ao criar pedido em modo API não cai silenciosamente para o fluxo local;
+- o backend aceita chamadas de páginas `file://` por CORS com `Origin: null`;
+- PostgreSQL é provisionado por Docker Compose;
+- o backend tem cobertura JaCoCo com gate de qualidade;
+- há um workflow de CI para front-end, backend e contrato Newman.
 
-Essas orientações continuam válidas. O estado detalhado das Etapas 1 a 6 está nas seções seguintes.
-Essas orientações continuam válidas. O estado detalhado das Etapas 1 a 6 está nas seções seguintes.
+## 2. Etapas concluídas
 
-## 1. Como retomar o projeto
+### Etapas 1 a 6 — front-end e documentação
 
-1. Leia `progresso.md` e a skill `cafe-na-mao`.
-2. Inspecione `git status` antes de alterar qualquer arquivo.
-3. Execute os testes existentes:
+- Página inicial, catálogo, detalhes, quantidade e carrinho.
+- Pagamento simulado, confirmação, histórico, status e limpeza.
+- Persistência local do carrinho e do histórico em `localStorage`.
+- Acessibilidade, responsividade, página Sobre, requisitos, plano e relatório.
+- Testes unitários com `node:test`.
+
+### Etapa 7 — API REST e testes de integração
+
+- API de bebidas em `/api/bebidas`.
+- API de pedidos em `/api/pedidos`, com total calculado no servidor.
+- Erros padronizados, validação e carga inicial de seis bebidas.
+- H2 em memória por padrão e perfil PostgreSQL.
+- Coleção Postman/Newman.
+- 29 testes JUnit 5/MockMvc na conclusão da etapa.
+
+### Etapa 8 — integração, cobertura, banco e CI
+
+- `js/api.js` criado com URL base, timeout, `ErroApi`, normalização e operações de
+  catálogo/pedidos.
+- `tests/api.test.js` criado com 12 testes.
+- `menu.html`/`js/menu.js` integrados à API, com badge de origem e fallback local.
+- `pedidos.html`/`js/pedidos.js` integrados para criação, histórico, status e
+  limpeza, mantendo o modo local quando a API não está disponível.
+- `style.css` recebeu os estilos do badge de origem.
+- `WebConfig.java` adicionado com CORS para `/api/**` e `Origin: null`.
+- `CorsIntegrationTest` adicionado com 2 testes.
+- `backend/pom.xml` recebeu JaCoCo 0.8.12, relatório e gate de 80% de linhas e 50%
+  de branches.
+- `compose.yaml` criado com PostgreSQL 16 Alpine, healthcheck e volume.
+- Porta host padrão do PostgreSQL alterada para **5433** para evitar conflito com o
+  PostgreSQL nativo da máquina na 5432.
+- `.github/workflows/ci.yml` criado com jobs de front-end, backend/JaCoCo e contrato
+  Newman, incluindo publicação do JAR e do relatório de cobertura.
+- Documentação atualizada: `AGENTS.md`, `README.md`, `sobre.html`,
+  `docs/requisitos.md`, `docs/plano-de-testes.md` e
+  `docs/relatorio-testes.md`.
+
+## 3. Decisões técnicas registradas
+
+1. O front-end continua sem build e sem servidor; a API é opcional na execução por
+   `file://`.
+2. A URL padrão é `http://localhost:8080/api`, com override por
+   `window.CAFE_NA_MAO_API_URL` ou `?api=`.
+3. O fallback local é usado na carga inicial de catálogo e histórico. Em modo API,
+   falha de criação de pedido não vira pedido local silencioso.
+4. O servidor continua sendo a fonte de verdade do preço e do total.
+5. CORS é restrito a `/api/**`, mas aceita `Origin: null` para desenvolvimento com
+   `file://`; não é uma configuração para produção pública.
+6. PostgreSQL usa a porta host 5433 por padrão, com `DB_PORT`, `DB_URL`, `DB_USER` e
+   `DB_PASSWORD` configuráveis.
+7. O gate JaCoCo está no `verify`; cobertura abaixo de 80% de linhas ou 50% de
+   branches deve falhar o build.
+8. O CI usa Node 24 e Java 21, com Maven Wrapper e Newman via `npx`. O contrato
+   sobe a API, espera o endpoint e executa o Newman na mesma etapa, encerrando o
+   processo Java ao final.
+9. Os testes E2E foram avaliados nesta etapa, mas permanecem temporários e não
+   versionados: dependem do Edge/Windows e não há autorização para introduzir uma
+   estrutura E2E ou dependência nova.
+
+## 4. Verificações executadas
+
+### Front-end
 
 ```powershell
 npm test
 ```
 
-4. Abra as páginas diretamente no navegador:
-
-```powershell
-start index.html
-start menu.html
-```
-
-5. Implemente somente a próxima etapa descrita na seção 14.
-6. Ao final, atualize este arquivo com resultados, pendências e a nova próxima etapa.
-
-Não é necessário servidor local nesta fase. Os scripts usam arquivos JavaScript clássicos, portanto funcionam também por `file://`.
-
-## 2. Visão do projeto
-
-O Café na Mão é uma aplicação acadêmica de pedidos de bebidas para uma máquina de café. O cliente deve consultar bebidas, escolher quantidade, montar um pedido e simular o pagamento. O projeto também precisa demonstrar práticas de Garantia de Qualidade de Software.
-
-Stack atual:
-
-- Frontend estático com HTML semântico, CSS e JavaScript puro.
-- Testes unitários do front-end com o executor nativo do Node.js.
-- Backend Java 22 com Spring Boot 3.4.5 e Maven Wrapper 3.9.9.
-- API REST de bebidas e pedidos com H2 em memória no perfil padrão.
-- Testes de integração com JUnit 5/MockMvc e contrato Postman/Newman.
-- PostgreSQL, JaCoCo, Docker Compose e CI ainda não implementados.
-
-Identidade visual:
-
-- Neobrutalismo com bordas grossas, sombras duras e blocos de alto contraste.
-- Carvão `#252525`, creme `#F5F0E8`, laranja `#FF6A00` e cinza `#D8D3CA`.
-- Marca textual “Café na Mão”. Não existe arquivo de logo no repositório.
-- Sem imagens ou fontes externas; a ilustração da xícara é feita com CSS.
-
-## 3. Estrutura atual
+Resultado final:
 
 ```text
-CaféNaMão/
-├── index.html                 Página inicial
-├── menu.html                  Catálogo de bebidas e painel de detalhes
-├── pedidos.html               Carrinho, pagamento, confirmação e histórico
-├── sobre.html                 Página Sobre o projeto
-├── pedidos.html               Carrinho, pagamento, confirmação e histórico
-├── sobre.html                 Página Sobre o projeto
-├── style.css                  Estilos globais e responsivos
-├── js/
-│   ├── dados.js               Dados das bebidas e formatação de preço
-│   ├── detalhes.js            Validação de quantidade e cálculo do total
-│   ├── carrinho.js            Regras do carrinho, total e persistência
-│   ├── historico.js           Histórico, pagamento simulado e status
-│   ├── menu.js                Renderização, estados e painel de detalhes
-│   └── pedidos.js             Carrinho na tela, pagamento e histórico
-│   ├── carrinho.js            Regras do carrinho, total e persistência
-│   ├── historico.js           Histórico, pagamento simulado e status
-│   ├── menu.js                Renderização, estados e painel de detalhes
-│   └── pedidos.js             Carrinho na tela, pagamento e histórico
-├── tests/
-│   ├── dados.test.js          Testes unitários dos dados
-│   ├── detalhes.test.js       Testes de quantidade e total
-│   ├── carrinho.test.js       Testes do carrinho e criação de pedido
-│   └── historico.test.js      Testes do histórico, pagamento e status
-├── backend/
-│   ├── pom.xml                Spring Boot 3.4.5 e Java 21 (release)
-│   ├── mvnw / mvnw.cmd        Maven Wrapper 3.9.9
-│   ├── src/main/java/
-│   │   └── com/cafenamao/
-│   │       ├── bebida/        Entidade, DTOs, service e controller
-│   │       ├── pedido/        Pedido, itens, enums, service e controller
-│   │       ├── comum/         Exceções e tratamento padronizado de erros
-│   │       └── config/        Carga inicial das seis bebidas
-│   ├── src/main/resources/    application.properties e perfil PostgreSQL
-│   ├── src/test/java/         29 testes JUnit 5/MockMvc
-│   └── postman/               Coleção e ambiente Postman/Newman
-├── docs/
-│   ├── requisitos.md          Requisitos funcionais e não funcionais
-│   ├── plano-de-testes.md     Plano e casos CT01 a CT39
-│   └── relatorio-testes.md    Resultados, evidências e limitações
-├── package.json               Script de testes; sem dependências
-├── README.md                  Documentação principal do projeto
-├── README.md                  Documentação principal do projeto
-├── progresso.md               Este registro
-└── projeto 1/                 Skills e configurações de agentes
+tests 65
+pass 65
+fail 0
+cancelled 0
+skipped 0
 ```
 
-## 4. Etapa 1 — Fundação visual e página inicial
+Distribuição: 10 de dados, 10 de detalhes, 14 de carrinho, 19 de histórico e 12 do
+cliente HTTP.
 
-Status: concluída.
-
-Implementado:
-
-- `index.html` com `lang="pt-BR"`, viewport mobile, título e descrição.
-- Estrutura semântica com `header`, `nav`, `main`, `section` e `footer`.
-- Link “Pular para o conteúdo” e navegação com `aria-current="page"`.
-
-
-- Página inicial com hero, chamada para o menu, seção “Como funciona” e rodapé.
-- Ilustração de xícara feita somente com CSS.
-- Cabeçalho fixo no desktop e estático em telas menores.
-- Foco de teclado visível, áreas de toque com pelo menos 44 px e suporte a `prefers-reduced-motion`.
-
-Arquivos: `index.html`, `style.css`.
-
-## 5. Etapa 2 — Catálogo de bebidas
-
-Status: concluída.
-
-Implementado:
-
-- `menu.html` com cabeçalho, navegação ativa, catálogo e rodapé.
-- Seis bebidas simuladas em `js/dados.js`.
-- Preços armazenados em centavos e formatados como moeda brasileira.
-- Cards com número, categoria, nome, descrição e preço.
-- Estado de carregamento com três esqueletos e `aria-busy="true"`.
-- Estado de lista vazia com mensagem e link para a página inicial.
-- Estado de erro com botão “Tentar novamente”.
-- Região `aria-live` para anunciar mudanças de estado.
-- Layout responsivo: 1 coluna no celular, 2 no tablet e 3 no desktop.
-- Textos vindos dos dados são inseridos com `textContent`, evitando interpretação de HTML.
-
-Bebidas atuais:
-
-| Bebida | Categoria | Preço |
-|---|---|---:|
-| Espresso Curto | Café | R$ 4,00 |
-| Café com Leite | Café | R$ 5,50 |
-| Cappuccino | Café | R$ 7,50 |
-| Mocha | Café | R$ 8,50 |
-| Chocolate Quente | Chocolate | R$ 7,00 |
-| Chá de Canela | Chá | R$ 5,00 |
-
-Arquivos: `menu.html`, `js/dados.js`, `js/menu.js`, `style.css`, `tests/dados.test.js`, `package.json`.
-
-### Como testar os estados do catálogo
-
-- Catálogo normal: abrir `menu.html`.
-- Lista vazia: abrir `menu.html?estado=vazio`.
-- Erro: abrir `menu.html?estado=erro` e clicar em “Tentar novamente”.
-
-Os parâmetros de estado são apenas um recurso de demonstração/teste. Eles valem para a primeira carga; o botão de nova tentativa carrega os dados normais.
-
-## 6. Etapa 3 — Detalhes e quantidade
-
-Status: concluída.
-
-Implementado:
-
-- Botão “Ver detalhes” em cada card, com `aria-haspopup="dialog"` e `aria-controls`.
-- Painel modal acessível usando o elemento nativo `<dialog>` em `menu.html`.
-- Detalhes com categoria, nome, descrição, preço unitário e seletor de quantidade.
-- Quantidade limitada de 1 a 10, com mensagem de erro para valores abaixo do mínimo, acima do máximo, fracionários ou não numéricos.
-- Total parcial calculado com inteiros em centavos e exibido com `formatarPreco`.
-- Fechamento pelo botão “Fechar” e pela tecla `Esc`, devolvendo o foco ao botão que abriu o painel.
-- Painel responsivo e sem rolagem horizontal em 390 px, 768 px e 1366 px.
-- Testes unitários em `tests/detalhes.test.js`.
-
-Arquivos: `menu.html`, `js/detalhes.js`, `js/menu.js`, `style.css`, `tests/detalhes.test.js`.
-
-## 7. Etapa 4 — Carrinho e criação de pedido
-
-Status: concluída.
-
-Implementado:
-
-- Botão “Adicionar ao pedido” no painel de detalhes, com a quantidade validada de 1 a 10.
-- `js/carrinho.js` como módulo clássico compartilhado pelo navegador e pelos testes Node.
-- Carrinho com identificador, nome, preço unitário congelado no momento da adição, quantidade e total geral em centavos.
-- Adições repetidas da mesma bebida somam a quantidade em uma única linha do carrinho.
-- Alteração de quantidade e remoção de itens em `pedidos.html`, com atualização imediata do subtotal e do total geral.
-- Persistência do carrinho em `localStorage` (chave `cafe-na-mao:carrinho:v1`), com fallback silencioso quando o armazenamento não estiver disponível.
-- Barra “Seu pedido” no menu com quantidade de itens, total e link para `pedidos.html`.
-- Estado de carrinho vazio com link “Escolher bebidas”.
-- Bloqueio da conclusão quando o carrinho está vazio, tanto na interface quanto na função `criarPedido`.
-- Confirmação simulada com número do pedido, data, itens, total e foco movido para a confirmação.
-- Mensagens anunciadas por `aria-live`, rótulos associados aos campos e navegação por teclado preservada.
-- Testes unitários em `tests/carrinho.test.js`.
-
-Arquivos: `menu.html`, `pedidos.html`, `style.css`, `js/carrinho.js`, `js/menu.js`, `js/pedidos.js`, `tests/carrinho.test.js`.
-
-## 8. Etapa 5 — Pagamento simulado e histórico de pedidos
-
-Status: concluída.
-
-Implementado:
-
-- Escolha obrigatória entre “Dinheiro” e “Cartão fictício”, sem solicitar ou armazenar dados reais de cartão.
-- Bloqueio da conclusão quando nenhuma forma de pagamento foi escolhida ou quando há quantidade inválida, com mensagem e foco no campo problemático.
-- `js/historico.js` como módulo clássico compartilhado pelo navegador e pelos testes Node.
-- Histórico persistido em `localStorage` na chave `cafe-na-mao:historico:v1`, com fallback silencioso quando o armazenamento não estiver disponível.
-- Registro com número, data, itens, total, forma de pagamento e status.
-- Histórico exibido em `pedidos.html`, com o pedido mais recente primeiro e estado vazio.
-- Alteração de status entre “Recebido”, “Em preparo” e “Finalizado”, com persistência imediata.
-- Limpeza do histórico em diálogo de confirmação, sem remover o carrinho atual.
-- O carrinho só é limpo depois que o pedido foi salvo no histórico; se a gravação falhar, o carrinho é mantido.
-- Pagamento e status aparecem na confirmação do pedido e nos cards do histórico.
-- Mensagens por `aria-live`, rótulos associados aos campos e foco devolvido ao título após limpar o histórico.
-- Testes unitários em `tests/historico.test.js`.
-
-Arquivos: `pedidos.html`, `style.css`, `js/historico.js`, `js/pedidos.js`, `tests/historico.test.js`.
-
-## 9. Etapa 6 — Documentação, página Sobre e planejamento de testes
-
-Status: concluída.
-
-Implementado:
-
-- `sobre.html` preenchida com a proposta, o fluxo atual, o pagamento simulado, o
-  escopo implementado, o que está fora do escopo e os próximos passos.
-- Estilos específicos da página Sobre em `style.css`, reutilizando a identidade
-  neobrutalista e o layout responsivo.
-- `README.md` reescrito com descrição, funcionalidades, stack, estrutura, execução,
-  testes, documentação, acessibilidade, limitações, uso de IA e próximos passos.
-- `docs/requisitos.md` com `RF01` a `RF15`, `RNF01` a `RNF10`, critérios de
-  aceitação e rastreabilidade para os casos de teste.
-- `docs/plano-de-testes.md` com escopo, estratégia, ambientes, dados, riscos,
-  critérios de entrada/saída e casos `CT01` a `CT26`.
-- `docs/relatorio-testes.md` com os resultados reais da suíte, verificações
-  estáticas, evidências do navegador, situação dos 26 casos e lacunas conhecidas.
-- Links internos entre README, documentos, progresso e páginas verificados.
-
-Arquivos: `sobre.html`, `style.css`, `README.md`, `progresso.md`, `docs/requisitos.md`,
-`docs/plano-de-testes.md`, `docs/relatorio-testes.md`.
-
-## 10. Etapa 7 — Backend, API REST e testes de integração
-
-Status: concluída.
-
-Implementado:
-
-- Projeto Maven em `backend/` com Spring Boot 3.4.5, Java `--release 21` e versão
-  `0.1.0`; Maven Wrapper 3.9.9 no modo `only-script`.
-- API REST de bebidas em `/api/bebidas`: listagem, consulta, criação, atualização
-  e exclusão, com validação por Bean Validation e HTTP 201/200/204/400/404/409.
-- API REST de pedidos em `/api/pedidos`: criação com total recalculado no
-  servidor, listagem ordenada, consulta por número, filtro por status, alteração
-  de status, exclusão e limpeza do histórico.
-- Regras mantidas do front-end: preços em centavos, quantidade de 1 a 10,
-  pagamento `dinheiro`/`cartao-ficticio` e status `recebido`/`em-preparo`/
-  `finalizado`.
-- Carga inicial idempotente das seis bebidas com os mesmos ids do catálogo.
-- Tratamento global de erros com `timestamp`, `status`, `erro`, `mensagem`,
-  `caminho` e `campos`; rota inexistente agora responde 404.
-- Perfil padrão H2 em memória (`cafe-na-mao-api`) e perfil PostgreSQL por
-  variáveis `DB_URL`, `DB_USER` e `DB_PASSWORD`.
-- 29 testes de integração JUnit 5/MockMvc: 11 de bebidas e 18 de pedidos.
-- Coleção e ambiente Postman/Newman com 18 requisições e 32 assertions.
-- Diretório `backend/target/` e artefatos de IDE ignorados em `backend/.gitignore`.
-
-Arquivos principais: `backend/pom.xml`, `backend/src/main/java/com/cafenamao/`,
-`backend/src/main/resources/application.properties`,
-`backend/src/main/resources/application-postgres.properties`,
-`backend/src/test/java/com/cafenamao/`, `backend/postman/`, `backend/mvnw`,
-`backend/mvnw.cmd`.
-
-Comandos executados:
+### Backend e cobertura
 
 ```powershell
 cd backend
-.\mvnw.cmd -v
-.\mvnw.cmd test
-.\mvnw.cmd -DskipTests package
-java -jar target\cafe-na-mao-api-0.1.0.jar
-npx --yes newman run postman\CafeNaMao.postman_collection.json `
-  -e postman\CafeNaMao.postman_environment.json --reporters cli --color off
+.\mvnw.cmd -B verify
 ```
 
-Resultados:
+Resultado final:
 
-- 29 testes aprovados, 0 reprovados, 0 ignorados.
-- JAR `cafe-na-mao-api-0.1.0.jar` gerado com sucesso.
-- Newman: 18 requisições, 0 falhas e 32 assertions aprovadas.
-- Chamadas HTTP reais confirmaram 6 bebidas, pedido `PED-D103D8F7` com total
-  `1550`, alteração para `em-preparo`, filtro com 1 pedido, 404 para bebida
-  inexistente e limpeza do histórico com 204.
-- Processo Java encerrado e porta 8080 liberada ao final.
+- **31 testes aprovados**, 0 falhas, 0 erros, 0 ignorados;
+- 11 testes de bebidas, 18 de pedidos e 2 de CORS;
+- JAR gerado em `backend/target/cafe-na-mao-api-0.1.0.jar`;
+- relatório JaCoCo gerado;
+- gate atendido com **93,59% de linhas** (263/281) e **62,50% de branches**;
+- `BUILD SUCCESS`.
 
-## 11. Decisões técnicas registradas
-
-1. HTML, CSS e JavaScript puro nesta fase para reduzir complexidade e facilitar a explicação na apresentação.
-2. Scripts clássicos com padrão de proteção e namespace global (`window.CafeNaMaoDados`) em vez de módulos ES. Isso permite abrir o projeto por `file://` sem servidor local.
-3. O painel de detalhes usa o elemento nativo `<dialog>`, com foco inicial no campo de quantidade e retorno do foco ao botão de origem ao fechar.
-4. Preços são inteiros em centavos. A formatação usa `Intl.NumberFormat("pt-BR")` e a validação rejeita valores negativos, fracionários ou não numéricos.
-5. O carregamento tem atraso simulado de 450 ms para permitir observar o estado de carregamento sem depender de rede.
-6. O catálogo em si não usa `localStorage`; a partir da Etapa 4 o carrinho é salvo em `localStorage` para atravessar as páginas.
-6. O catálogo em si não usa `localStorage`; a partir da Etapa 4 o carrinho é salvo em `localStorage` para atravessar as páginas.
-7. Os cards são renderizados com criação de elementos DOM e `textContent`, não com interpolação direta de dados em `innerHTML`.
-8. O cabeçalho é fixo apenas acima de 860 px. Em telas menores ele fica estático para não consumir grande parte da tela.
-9. Testes usam o executor nativo do Node.js, sem dependências externas e sem `package-lock.json`.
-10. Não há pagamento real. O rodapé e o texto do catálogo informam que o pagamento é simulado.
-11. A quantidade fica limitada de 1 a 10; validação e cálculo do total estão em `js/detalhes.js`, isolados para permitir testes no Node.
-12. O total parcial da Etapa 3 não cria carrinho: apenas multiplica o preço unitário pela quantidade, sempre em centavos inteiros.
-13. O carrinho guarda uma cópia do nome e do preço unitário no momento da adição, para que o resumo não dependa de mudanças futuras no catálogo.
-14. A quantidade máxima de 10 vale por bebida no carrinho. Tentar ultrapassar esse limite somando adições repetidas exibe a mensagem de validação e não altera o item.
-15. O carrinho é salvo em `localStorage` para sobreviver à navegação entre `menu.html` e `pedidos.html`; se o navegador bloquear o armazenamento, a página continua funcionando durante a sessão.
-16. A conclusão do pedido cria um objeto com número, data, cópia dos itens, total, pagamento e status. O pedido é salvo no histórico antes de o carrinho ser limpo. Não há pagamento real nem envio ao backend.
-17. A forma de pagamento é obrigatória e limitada a “dinheiro” ou “cartão fictício”. Nenhum número, validade ou código de cartão é solicitado ou armazenado.
-18. Se o histórico não puder ser salvo, a confirmação não avança e o carrinho é mantido, evitando perda silenciosa do pedido.
-19. O histórico valida os campos e recalcula o total a partir dos itens; registros corrompidos, com status/pagamento desconhecido ou total divergente são ignorados.
-20. O status é alterado manualmente entre “Recebido”, “Em preparo” e “Finalizado”; não há progressão automática.
-21. O histórico e o carrinho ficam apenas no `localStorage` do navegador. Não há conta de usuário, sincronização entre dispositivos ou backend.
-22. A Etapa 6 documenta somente o que está implementado. Backend, API, banco, Docker, CI e pagamento real aparecem como escopo futuro, sem simular funcionalidades inexistentes.
-23. Requisitos, plano, relatório e README usam links relativos e IDs estáveis (`RF`, `RNF` e `CT`) para manter a rastreabilidade dentro do repositório.
-24. O relatório registra evidências reais e limitações: 53 testes automatizados, verificações estáticas e roteiros manuais no Edge em 390, 768 e 1366 px.
-25. A página Sobre reutiliza os componentes visuais existentes e não adiciona novas funcionalidades ao fluxo de pedidos.
-26. O backend usa Spring Boot 3.4.5 compilado com `--release 21`, executado em Java 22.0.2, para manter compatibilidade com Java 21 LTS.
-27. O Maven Wrapper foi gerado em modo `only-script` e aponta para o Maven 3.9.9, permitindo build e testes sem Maven global.
-28. O perfil padrão usa H2 em memória para desenvolvimento e testes; o PostgreSQL fica isolado em perfil com variáveis de ambiente e não foi executado nesta etapa.
-29. O servidor é a fonte de verdade dos pedidos: o cliente envia `bebidaId` e `quantidade`, e o total é recalculado em centavos no backend.
-30. Os ids e preços das bebidas no backend coincidem com `js/dados.js`, mas o front-end ainda não consome a API.
-31. Os erros usam um formato único e estável, e rotas inexistentes são tratadas como 404 em vez de 500.
-32. A coleção Postman usa variáveis de coleção e o ambiente local (`http://localhost:8080`) para permitir execução repetível via Newman.
-
-## 12. Verificações executadas
-
-### Testes automatizados
-
-Comando:
+### Contrato Postman/Newman
 
 ```powershell
-npm test
+npx --yes newman run backend\postman\CafeNaMao.postman_collection.json `
+  -e backend\postman\CafeNaMao.postman_environment.json `
+  --reporters cli --color off
 ```
 
-O comando executa `node --test`. Em sessões anteriores, quando o `npm.ps1` estava bloqueado, foi usada a versão `npm.cmd`.
+Resultado: **18 requisições, 0 falhas, 32 assertions aprovadas**.
 
-Resultado: **53 testes aprovados, 0 reprovados, 0 ignorados** (19 novos testes de histórico).
-O comando executa `node --test`. Em sessões anteriores, quando o `npm.ps1` estava bloqueado, foi usada a versão `npm.cmd`.
+### E2E no navegador
 
-Resultado: **53 testes aprovados, 0 reprovados, 0 ignorados** (19 novos testes de histórico).
+Executado com Edge 156 headless via CDP, usando script temporário fora do
+repositório.
 
-Cobertura atual dos testes:
+- `menu.html` com API: badge `API` e 6 cards.
+- `pedidos.html` com API: histórico sincronizado.
+- Pedido `PED-501ECE45` criado com 2 Espressos, total `R$ 8,00`.
+- Status alterado para `em-preparo` e persistido na API.
+- Limpeza do histórico persistida na API.
+- Sem API: catálogo local com 6 cards e mensagens de indisponibilidade.
+- Console sem erros de JavaScript.
 
-- quantidade mínima de bebidas;
-- unicidade dos identificadores;
-- presença de dados obrigatórios;
-- preços inteiros e positivos;
-- formatação de moeda;
-- limite inferior de preço zero;
-- separador de milhar;
-- rejeição de preço negativo, fracionário e não numérico;
-- quantidade válida dentro dos limites de 1 a 10;
-- rejeição de quantidade abaixo do mínimo, acima do máximo, fracionária ou não numérica;
-- cálculo do total em centavos, inclusive nos limites mínimo e máximo;
-- rejeição de quantidade e preço inválidos no cálculo do total;
-- total do carrinho vazio igual a zero;
-- total do carrinho com bebidas diferentes;
-- soma de itens repetidos em uma única linha;
-- alteração de quantidade e remoção de itens;
-- bloqueio de pedido com carrinho vazio;
-- criação de pedido com número, data, cópia dos itens e total;
-- rejeição de quantidade inválida e de soma acima do limite;
-- persistência do carrinho em armazenamento simulado;
-- criação de registro com pagamento e status inicial;
-- rejeição de pagamento, status, itens e total inválidos no histórico;
-- leitura de histórico vazio, ausente ou com JSON inválido;
-- gravação, ordenação do mais recente e substituição de número repetido;
-- alteração de status existente e rejeição de status/pedido inválido;
-- filtragem de registros corrompidos e números duplicados;
-- limpeza do histórico;
-- comportamento com armazenamento indisponível;
-- rótulos em português para status e pagamento.
-- rejeição de quantidade e preço inválidos no cálculo do total;
-- total do carrinho vazio igual a zero;
-- total do carrinho com bebidas diferentes;
-- soma de itens repetidos em uma única linha;
-- alteração de quantidade e remoção de itens;
-- bloqueio de pedido com carrinho vazio;
-- criação de pedido com número, data, cópia dos itens e total;
-- rejeição de quantidade inválida e de soma acima do limite;
-- persistência do carrinho em armazenamento simulado;
-- criação de registro com pagamento e status inicial;
-- rejeição de pagamento, status, itens e total inválidos no histórico;
-- leitura de histórico vazio, ausente ou com JSON inválido;
-- gravação, ordenação do mais recente e substituição de número repetido;
-- alteração de status existente e rejeição de status/pedido inválido;
-- filtragem de registros corrompidos e números duplicados;
-- limpeza do histórico;
-- comportamento com armazenamento indisponível;
-- rótulos em português para status e pagamento.
+A página Sobre atualizada foi verificada separadamente em Edge headless, nas
+larguras 390, 768 e 1366 px:
 
-Também foram executados:
+- título, H1, 3 cards de contexto e 3 blocos de escopo presentes;
+- textos de integração, JaCoCo/Compose/CI visíveis;
+- nenhum link quebrado ou `href="#"`;
+- nenhuma rolagem horizontal e nenhum erro de console.
+
+### CI em simulação local
+
+O job de contrato foi ajustado para iniciar a API, aguardar `GET /api/bebidas`,
+executar o Newman e encerrar o Java na mesma etapa. O fluxo foi repetido com Git
+Bash:
+
+- 18 requisições e 32 assertions aprovadas, 0 falhas;
+- porta 8080 liberada após o término;
+- arquivo temporário de log removido.
+
+### PostgreSQL
+
+- `docker compose config` válido.
+- Container PostgreSQL ficou `healthy`.
+- Perfil `postgres` carregou 6 bebidas.
+- Pedido `PED-7D812006` persistiu após reiniciar a API.
+- `DELETE /api/pedidos` deixou o histórico remoto vazio.
+- `docker compose down` executado; volume preservado.
+
+### Verificações estáticas
 
 ```powershell
-node --check js/dados.js
-node --check js/detalhes.js
-node --check js/carrinho.js
-node --check js/historico.js
-node --check js/carrinho.js
+node --check js/api.js
 node --check js/historico.js
 node --check js/menu.js
 node --check js/pedidos.js
-node --check js/pedidos.js
-node --check tests/dados.test.js
-node --check tests/detalhes.test.js
-node --check tests/carrinho.test.js
-node --check tests/historico.test.js
-node --check tests/carrinho.test.js
-node --check tests/historico.test.js
+node --check tests/api.test.js
+git diff --check
+npx --yes js-yaml .github/workflows/ci.yml
 ```
 
-Resultado: sem erros de sintaxe.
+Resultado: sintaxe válida, YAML válido e `git diff --check` sem erros.
 
-Foi executada também uma verificação estática complementar:
+## 5. Tarefas pendentes
 
-- todos os IDs usados por `getElementById` em `js/menu.js` e `js/pedidos.js` existem nas respectivas páginas, inclusive os do pagamento e do histórico;
-- não há IDs duplicados em `index.html`, `menu.html`, `pedidos.html` ou `sobre.html`;
-- as referências de `aria-labelledby` e `aria-describedby` apontam para IDs existentes;
-- `js/historico.js` é carregado depois de `js/carrinho.js` e antes de `js/pedidos.js`;
-- não há `href="#"` nem estilos inline;
-- todos os links internos apontam para arquivos existentes.
+- Executar o workflow no GitHub Actions pela primeira vez; isso exige autorização
+  para commit/push e deve ser o primeiro passo da próxima sessão.
+- Versionar um teste E2E estável, se isso for autorizado; a avaliação da Etapa 8
+  concluiu que o roteiro temporário é suficiente para o escopo atual.
+- Ampliar a matriz de navegadores e a verificação de acessibilidade.
+- Revisar a configuração de CORS para um eventual ambiente publicado.
+- Atualizar a documentação a cada nova etapa.
+- Definir e autorizar a próxima etapa; não iniciar a Etapa 9 sem pedido explícito.
+- Fazer commit/push somente quando o usuário solicitar.
 
-### Backend, API e contrato
+## 6. Arquivos modificados e criados
 
-Comandos:
+### Modificados
 
-```powershell
-cd backend
-.\mvnw.cmd -v
-.\mvnw.cmd test
-.\mvnw.cmd -DskipTests package
-java -jar target\cafe-na-mao-api-0.1.0.jar
-npx --yes newman run postman\CafeNaMao.postman_collection.json `
-  -e postman\CafeNaMao.postman_environment.json --reporters cli --color off
-```
+- `AGENTS.md`
+- `README.md`
+- `backend/pom.xml`
+- `backend/src/main/resources/application-postgres.properties`
+- `docs/plano-de-testes.md`
+- `docs/requisitos.md`
+- `docs/relatorio-testes.md`
+- `js/historico.js`
+- `js/menu.js`
+- `js/pedidos.js`
+- `menu.html`
+- `pedidos.html`
+- `sobre.html`
+- `style.css`
+- `progresso.md`
 
-Resultados:
+### Criados
 
-- `.\mvnw.cmd -v` confirmou Maven Wrapper 3.9.9 e Java 22.0.2.
-- 29 testes JUnit 5/MockMvc aprovados: 11 de bebidas e 18 de pedidos.
-- JAR `cafe-na-mao-api-0.1.0.jar` gerado em `backend/target/`.
-- `GET /api/bebidas` retornou as 6 bebidas da carga inicial.
-- `POST /api/pedidos` retornou `PED-D103D8F7`, total `1550` e status `recebido`.
-- `PATCH` alterou o status para `em-preparo`; o filtro retornou 1 pedido.
-- Bebida inexistente respondeu 404; `DELETE /api/pedidos` respondeu 204 e a lista
-  final ficou vazia.
-- Newman executou 18 requisições com 0 falhas e 32 assertions aprovadas.
-- A coleção e o ambiente foram validados como JSON antes da execução.
-- O processo Java foi encerrado e a porta 8080 ficou livre.
+- `.github/workflows/ci.yml`
+- `backend/src/main/java/com/cafenamao/config/WebConfig.java`
+- `backend/src/test/java/com/cafenamao/config/CorsIntegrationTest.java`
+- `compose.yaml`
+- `js/api.js`
+- `tests/api.test.js`
 
-### Verificação no navegador
+## 7. Limitações conhecidas
 
-Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewports de 390, 768 e 1366 px. O script auxiliar foi temporário e não foi adicionado ao repositório.
-Executada com Microsoft Edge 156 em modo headless, controlado por CDP, com viewports de 390, 768 e 1366 px. O script auxiliar foi temporário e não foi adicionado ao repositório.
+- O CI foi validado localmente, mas ainda não rodou no GitHub Actions.
+- Não há testes de DOM/E2E versionados; o E2E foi temporário.
+- A verificação de interface foi feita apenas no Edge.
+- O CORS com `Origin: null` é adequado ao desenvolvimento local, não à produção.
+- Fallback local e API não são sincronizados automaticamente.
+- O H2 é em memória e perde dados ao reiniciar; PostgreSQL é a opção persistente.
+- O pagamento é simulado; nenhum dado real de cartão é coletado.
+- Não há autenticação, contas ou sincronização entre dispositivos.
+- Não há integração física com a máquina de bebidas.
 
-| Cenário | Resultado |
-|---|---|
-| `menu.html` em 390/768/1366 px | Sem rolagem horizontal |
-| Detalhes com quantidade 3 | Total parcial `R$ 12,00`; foco inicial no campo |
-| Adicionar ao pedido | Painel fecha e resumo mostra `3 itens · R$ 12,00` |
-| Duas bebidas no carrinho | `5 itens · R$ 23,00` |
-| Adicionar a mesma bebida novamente | Quantidade somada: `6 itens · R$ 27,00` e 2 linhas no armazenamento |
-| `pedidos.html` em 390/768/1366 px | Sem rolagem horizontal; total inicial `R$ 27,00` |
-| Alterar quantidade para 5 | Subtotal `R$ 20,00` e total `R$ 31,00` |
-| Quantidade 11 | Mensagem “A quantidade máxima é 10.” e total inalterado |
-| Remover item | Total recalculado para `R$ 20,00` e uma linha restante |
-| Concluir pedido | Confirmação visível, número `PED-…`, total `R$ 20,00` e foco na confirmação |
-| Após concluir | Carrinho salvo limpo; recarregar mostra “Seu carrinho está vazio.” |
-| Concluir sem pagamento | Bloqueia e mantém o carrinho visível |
-| Concluir com quantidade 11 | Bloqueia a conclusão e move o foco para o campo |
-| Concluir com pagamento escolhido | Confirmação exibida e pedido salvo no histórico |
-| Após recarregar com histórico | Pedido persiste e carrinho fica vazio |
-| Alterar status | Persiste no histórico e atualiza o cartão |
-| Cancelar limpeza | Diálogo fecha sem apagar o histórico |
-| Limpar histórico | Diálogo confirma, remove o storage e exibe histórico vazio |
-| Teclado | `Esc` fecha o painel e devolve o foco ao botão de origem |
-| Console | Nenhum erro de JavaScript durante o fluxo |
-| Confirmação em 390/1366 px | Sem rolagem horizontal |
-| Histórico em 390/768/1366 px | Sem rolagem horizontal |
+## 8. Próximo passo recomendado
 
-### Verificação da Etapa 6
-
-- `index.html` e `sobre.html` abertos no Edge 156 headless via CDP.
-- Navegação principal abriu `menu.html`, `pedidos.html` e `sobre.html`; o link ativo
-  foi conferido em cada página.
-- A página Sobre exibiu três cards de contexto, três blocos de escopo, CTA e rodapé.
-- Larguras de 390, 768 e 1366 px sem rolagem horizontal.
-- Nenhum erro de JavaScript no console.
-- `CT16` confirmado: com falha simulada em `Storage.prototype.setItem`, a confirmação
-  não avançou, o carrinho foi preservado e nenhum pedido foi salvo.
-- Links internos de README, documentos e páginas verificados; `RF01`–`RF15`,
-  `RNF01`–`RNF10` e `CT01`–`CT26` presentes.
-- `docs/` agora contém requisitos, plano e relatório; o README aponta para os três.
-- Capturas temporárias da página Sobre em 1366 e 390 px foram inspecionadas e não
-  foram versionadas.
-| `menu.html` em 390/768/1366 px | Sem rolagem horizontal |
-| Detalhes com quantidade 3 | Total parcial `R$ 12,00`; foco inicial no campo |
-| Adicionar ao pedido | Painel fecha e resumo mostra `3 itens · R$ 12,00` |
-| Duas bebidas no carrinho | `5 itens · R$ 23,00` |
-| Adicionar a mesma bebida novamente | Quantidade somada: `6 itens · R$ 27,00` e 2 linhas no armazenamento |
-| `pedidos.html` em 390/768/1366 px | Sem rolagem horizontal; total inicial `R$ 27,00` |
-| Alterar quantidade para 5 | Subtotal `R$ 20,00` e total `R$ 31,00` |
-| Quantidade 11 | Mensagem “A quantidade máxima é 10.” e total inalterado |
-| Remover item | Total recalculado para `R$ 20,00` e uma linha restante |
-| Concluir pedido | Confirmação visível, número `PED-…`, total `R$ 20,00` e foco na confirmação |
-| Após concluir | Carrinho salvo limpo; recarregar mostra “Seu carrinho está vazio.” |
-| Concluir sem pagamento | Bloqueia e mantém o carrinho visível |
-| Concluir com quantidade 11 | Bloqueia a conclusão e move o foco para o campo |
-| Concluir com pagamento escolhido | Confirmação exibida e pedido salvo no histórico |
-| Após recarregar com histórico | Pedido persiste e carrinho fica vazio |
-| Alterar status | Persiste no histórico e atualiza o cartão |
-| Cancelar limpeza | Diálogo fecha sem apagar o histórico |
-| Limpar histórico | Diálogo confirma, remove o storage e exibe histórico vazio |
-| Teclado | `Esc` fecha o painel e devolve o foco ao botão de origem |
-| Console | Nenhum erro de JavaScript durante o fluxo |
-| Confirmação em 390/1366 px | Sem rolagem horizontal |
-| Histórico em 390/768/1366 px | Sem rolagem horizontal |
-
-### Verificação da Etapa 6
-
-- `index.html` e `sobre.html` abertos no Edge 156 headless via CDP.
-- Navegação principal abriu `menu.html`, `pedidos.html` e `sobre.html`; o link ativo
-  foi conferido em cada página.
-- A página Sobre exibiu três cards de contexto, três blocos de escopo, CTA e rodapé.
-- Larguras de 390, 768 e 1366 px sem rolagem horizontal.
-- Nenhum erro de JavaScript no console.
-- `CT16` confirmado: com falha simulada em `Storage.prototype.setItem`, a confirmação
-  não avançou, o carrinho foi preservado e nenhum pedido foi salvo.
-- Links internos de README, documentos e páginas verificados; `RF01`–`RF15`,
-  `RNF01`–`RNF10` e `CT01`–`CT26` presentes.
-- `docs/` agora contém requisitos, plano e relatório; o README aponta para os três.
-- Capturas temporárias da página Sobre em 1366 e 390 px foram inspecionadas e não
-  foram versionadas.
-
-## 13. Pendências e limitações conhecidas
-
-- A verificação foi feita no Edge headless; uma conferência visual rápida no
-  navegador real ainda é recomendada antes da apresentação.
-- O front-end ainda não consome a API; carrinho e histórico continuam no
-  `localStorage` e não há sincronização entre dispositivos.
-- O status do pedido é alterado manualmente na interface e não evolui
-  automaticamente.
-- O carrinho e o histórico dependem de `localStorage`; se o armazenamento for
-  bloqueado, a navegação entre menu e pedidos pode não persistir o carrinho.
-- O perfil PostgreSQL não foi executado porque o Docker daemon não estava em
-  execução; apenas o perfil H2 em memória foi validado.
-- O H2 é em memória: reiniciar a API recria o catálogo e apaga os pedidos.
-- Não há JaCoCo, Docker Compose, CI ou GitHub Actions.
-- Não há testes automatizados de DOM/E2E no repositório; a interface foi
-  verificada manualmente com apoio de scripts temporários no Edge.
-- A pasta não é um repositório Git nesta sessão, então `git diff --check` não foi
-  executado.
-- `docs/relatorio-testes.md` é um registro manual e precisa ser atualizado a cada
-  mudança relevante no código ou nos testes.
-- Riscos não bloqueantes no código: o evento `close` do `<dialog>` em `js/menu.js`
-  e `salvarCarrinho` sem retorno explícito de falha. Os fluxos testados continuam
-  funcionando; uma revisão pode ser feita em etapa própria.
-- Não existe arquivo de logo; a marca é textual.
-- Nenhum dado real de cartão pode ser coletado ou armazenado.
-
-## 14. Próxima etapa — Etapa 8: integração, cobertura e infraestrutura
-
-Status: aguardando autorização do usuário. Não iniciar sem pedido explícito.
-
-Objetivo sugerido: integrar o front-end à API já implementada e evoluir a
-qualidade e a infraestrutura sem quebrar as regras validadas.
-
-Tarefas previstas (a confirmar):
-Tarefas previstas (a confirmar):
-
-1. Definir a estratégia de integração: consumo da API no navegador, fallback e
-   tratamento de indisponibilidade.
-2. Migrar catálogo, criação de pedidos, histórico e status para a API, mantendo os
-   contratos atuais e os preços em centavos.
-3. Preservar o funcionamento por `file://` quando a API não estiver disponível.
-4. Adicionar cobertura de código com JaCoCo e publicar o relatório.
-5. Provisionar PostgreSQL com Docker Compose e validar o perfil alternativo.
-6. Configurar CI para executar as suítes de front-end e backend.
-7. Avaliar testes automatizados de DOM/E2E e ampliar a matriz de navegadores.
-
-Critérios de conclusão sugeridos:
-Critérios de conclusão sugeridos:
-
-- front-end integrado à API com estados de carregamento, erro e fallback claros;
-- 53 testes do front-end e 29 testes do backend preservados ou ampliados;
-- cobertura de backend medida e documentada;
-- PostgreSQL validado via Docker Compose, se o ambiente permitir;
-- pipeline de CI executando build, testes e cobertura;
-- documentação, relatório e este arquivo atualizados.
-
-## 15. Checklist para a próxima sessão
-
-- [ ] Ler a skill e este arquivo.
-- [ ] Rodar `npm test` e `.\mvnw.cmd test` antes de começar.
-- [ ] Confirmar com o usuário o escopo da Etapa 8.
-- [ ] Implementar somente a etapa autorizada.
-- [ ] Executar testes unitários, testes de API e verificação no navegador.
-- [ ] Revisar o diff e procurar regressões nas Etapas 1 a 7.
-- [ ] Atualizar `docs/relatorio-testes.md` e `progresso.md` com os novos resultados.
-- [ ] Não fazer commit ou push sem solicitação explícita do usuário.
+A Etapa 8 está encerrada localmente: integração, testes, cobertura, PostgreSQL,
+CI, E2E e revisão visual foram concluídos e documentados. Para validar o CI no
+GitHub Actions, peça autorização explícita para commit/push. Depois disso, definir
+o escopo da Etapa 9. Não fazer commit ou push sem solicitação explícita.

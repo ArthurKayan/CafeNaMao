@@ -1,11 +1,12 @@
 # Plano de testes — Café na Mão
 
-**Versão:** 1.1  
-**Data:** 10/11/2026  
-**Escopo:** Etapas 1 a 7 — front-end estático e API REST Java/Spring Boot.  
+**Versão:** 1.2
+**Data:** 13/11/2026
+**Escopo:** Etapas 1 a 8 — front-end estático integrado à API REST, backend
+Java/Spring Boot, PostgreSQL via Docker Compose, cobertura JaCoCo e CI.
 **Objetivo:** definir a estratégia, os ambientes, os critérios e os casos de teste
 para validar o fluxo de catálogo, carrinho, pagamento simulado, histórico de
-pedidos e os endpoints da API.
+pedidos, os endpoints da API e a integração entre as camadas.
 
 ## 1. Escopo
 
@@ -20,17 +21,21 @@ pedidos e os endpoints da API.
 - Testes unitários com `node:test`.
 - API REST de bebidas e pedidos com Spring Boot.
 - Validação de dados, cálculo do total no servidor e códigos HTTP.
-- Testes de integração com JUnit 5/MockMvc.
+- Testes de integração com JUnit 5/MockMvc, incluindo CORS.
+- Integração do front-end com a API e fallback local por `file://`.
+- Cliente HTTP com normalização, timeout e tratamento de erros.
 - Coleção Postman/Newman.
+- Cobertura de código e gate JaCoCo.
+- PostgreSQL com Docker Compose e persistência.
+- Workflow de CI para front-end, backend e contrato.
 
 ### 1.2 Excluído
 
-- Integração do front-end com a API REST.
-- Docker Compose, provisionamento de PostgreSQL, JaCoCo e CI.
 - Pagamento real, autenticação, contas e sincronização entre dispositivos.
 - Integração física com a máquina de bebidas.
-- Testes automatizados de DOM e E2E nesta fase.
-- Testes de carga, segurança ofensiva e compatibilidade com todos os navegadores.
+- Implantação pública, configuração de produção e testes de carga/segurança ofensiva.
+- Matriz completa de navegadores e suíte E2E versionada nesta etapa.
+- Execução remota do workflow no GitHub Actions nesta sessão.
 
 ## 2. Referências
 
@@ -43,7 +48,8 @@ pedidos e os endpoints da API.
 ## 3. Estratégia
 
 1. **Testes unitários:** validar dados, quantidades, totais, carrinho, histórico,
-   pagamento e status com `node:test`, usando entradas válidas, inválidas e limites.
+   pagamento, status e cliente HTTP com `node:test`, usando entradas válidas,
+   inválidas e limites.
 2. **Testes de interface manuais:** percorrer o fluxo no navegador, incluindo teclado,
    foco, mensagens, diálogos e estados de carregamento/erro.
 3. **Verificação de responsividade:** conferir 390, 768 e 1366 px, sem rolagem
@@ -51,10 +57,14 @@ pedidos e os endpoints da API.
 4. **Verificações estáticas:** checar sintaxe, IDs, referências ARIA, links internos,
    ausência de `href="#"` e estilos inline.
 5. **Testes de integração da API:** subir o contexto Spring Boot com H2 e exercitar
-   os endpoints com JUnit 5/MockMvc, incluindo sucesso, validação, limites, 404 e 409.
-6. **Testes de contrato manual/automatizado:** executar a coleção Postman/Newman
-   contra a API em execução.
-7. **Evolução futura:** integração do front-end, JaCoCo, Docker Compose e CI.
+   os endpoints com JUnit 5/MockMvc, incluindo sucesso, validação, limites, 404,
+   409 e CORS.
+6. **Testes de contrato:** executar a coleção Postman/Newman contra a API em execução.
+7. **Testes de integração no navegador:** abrir as páginas por `file://`, consumir a
+   API real via CDP/Edge e conferir fallback local, persistência e console.
+8. **Cobertura e infraestrutura:** executar `verify` com JaCoCo, subir PostgreSQL no
+   Compose e validar o workflow de CI.
+9. **Evolução futura:** versionar E2E e ampliar a matriz de navegadores.
 
 Os testes priorizam comportamento observável. Não devem depender de serviços
 externos, dados reais de cartão ou de uma máquina física.
@@ -64,22 +74,21 @@ externos, dados reais de cartão ou de uma máquina física.
 | Item | Versão/configuração atual |
 |---|---|
 | Sistema | Windows 10/11 |
-| Node.js | 24.11.1 |
-| Navegador | Microsoft Edge 156 |
+| Node.js | 24.16.0 |
+| Navegador | Microsoft Edge 156 (headless via CDP) |
 | Execução do front-end | `file://`, sem servidor local |
-| Dependências npm | Nenhuma |
+| Dependências npm | Nenhuma no projeto |
 | Armazenamento do front-end | `localStorage` do navegador |
 | Java | 22.0.2 (compilação com `--release 21`) |
 | Spring Boot | 3.4.5 |
 | Maven | Wrapper 3.9.9 |
 | Banco padrão | H2 2.3.232 em memória |
-| Perfil alternativo | PostgreSQL (não executado nesta etapa) |
+| Perfil alternativo | PostgreSQL 16 Alpine via Docker Compose, porta host 5433 |
 | Testes da API | JUnit 5 + MockMvc |
+| Cobertura | JaCoCo 0.8.12, gate 80% linhas / 50% branches |
 | Coleção de API | Postman/Newman |
-| CI | Não implementado |
-
-Ambiente futuro previsto: PostgreSQL provisionado, Docker Compose, JaCoCo e GitHub
-Actions.
+| Docker | 29.2.1 e Compose v5.1.0 |
+| CI | GitHub Actions configurado; execução remota pendente |
 
 ## 5. Dados de teste
 
@@ -98,6 +107,10 @@ Actions.
 | Pagamentos da API | `dinheiro`, `cartao-ficticio` |
 | Status da API | `recebido`, `em-preparo`, `finalizado` |
 | Erros esperados | 400 validação/regra, 404 ausente, 409 conflito |
+| URL da API | `http://localhost:8080/api` (override por `CAFE_NA_MAO_API_URL` ou `?api=`) |
+| Pedido do E2E | 2 Espressos = 800 centavos; número `PED-501ECE45` |
+| Persistência PostgreSQL | Pedido `PED-7D812006`; 6 bebidas; histórico limpo ao final |
+| Cobertura JaCoCo | 93,59% linhas; 62,50% branches |
 
 ## 6. Critérios de entrada, saída, suspensão e retomada
 
@@ -107,16 +120,21 @@ Actions.
 - Node.js instalado e `npm test` executável.
 - Navegador moderno disponível para a verificação manual.
 - Java disponível e Maven Wrapper executável para o backend.
+- Docker/Compose disponíveis para os casos de PostgreSQL.
+- API iniciada antes dos casos de integração e de contrato.
 
 ### Saída
 
 - Casos críticos executados sem falha.
-- `npm test` com todos os testes do front-end aprovados.
-- `.\mvnw.cmd test` com todos os testes do backend aprovados.
+- `npm test` com 65 testes do front-end aprovados.
+- `.\mvnw.cmd verify` com 31 testes, JAR e gate JaCoCo aprovados.
 - Nenhum erro de JavaScript no console durante o fluxo principal.
 - Nenhuma rolagem horizontal nas larguras verificadas.
 - Nenhum dado real de cartão no código, na interface ou no armazenamento.
 - API retornando os códigos HTTP previstos para sucesso e erro.
+- Fallback local observado sem perda silenciosa de pedido em modo API.
+- PostgreSQL preservando dados após reiniciar a API.
+- Workflow de CI válido como YAML e comandos executados localmente.
 
 ### Suspensão
 
@@ -142,6 +160,11 @@ a evidência e atualizar o relatório.
 | H2 em memória apagar dados ao reiniciar | Perda de pedidos de demonstração | Documentar a limitação e usar PostgreSQL quando necessário |
 | Porta 8080 ocupada | API não inicia | Identificar o processo, liberar a porta ou configurar outra |
 | Falha ao salvar pedido | Pedido perdido | Salvar histórico antes de limpar o carrinho |
+| API indisponível após o carregamento | Ação falha no modo API | Exibir erro, manter o carrinho e não criar pedido local silenciosamente |
+| Timeout ou resposta inválida | Catálogo/histórico não sincronizam | Timeout no cliente, mensagem clara e fallback local na carga inicial |
+| Porta 5432 ocupada por PostgreSQL nativo | Compose conecta no banco errado | Usar 5433 por padrão e permitir `DB_PORT`/`DB_URL` |
+| Workflow divergir do ambiente local | CI falha no GitHub | Validar YAML e repetir os mesmos comandos localmente |
+| Teste E2E temporário | Sem regressão automatizada versionada | Registrar a limitação e versionar E2E em etapa autorizada |
 
 ## 8. Casos de teste
 
@@ -410,7 +433,7 @@ a evidência e atualizar o relatório.
 - **Passos:** executar `npm test`, `node --check` nos JavaScripts, checagem de IDs e
   links, `git diff --check` e abrir as páginas por `file://`.
 - **Dados:** arquivos atuais do projeto e documentação em `docs/`.
-- **Resultado esperado:** 53 testes aprovados, sem erro de sintaxe, IDs/links válidos,
+- **Resultado esperado:** 65 testes aprovados, sem erro de sintaxe, IDs/links válidos,
   sem servidor local e documentação rastreável.
 
 ### CT27 — API lista e consulta bebidas
@@ -541,11 +564,109 @@ a evidência e atualizar o relatório.
 - **Requisito:** RNF11, RNF12, RNF13.
 - **Tipo:** automatizado/estático.
 - **Pré-condições:** Java instalado e pasta `backend/`.
-- **Passos:** executar `.\mvnw.cmd -v`, `.\mvnw.cmd test` e
+- **Passos:** executar `.\mvnw.cmd -v`, `.\mvnw.cmd verify` e
   `.\mvnw.cmd -DskipTests package`; conferir o perfil H2 e o arquivo PostgreSQL.
 - **Dados:** Maven Wrapper 3.9.9; Spring Boot 3.4.5; H2 em memória.
-- **Resultado esperado:** wrapper funcional, 29 testes aprovados, JAR gerado,
-  `application-postgres.properties` presente e H2 configurado no perfil padrão.
+- **Resultado esperado:** wrapper funcional, 31 testes aprovados, JAR gerado,
+  JaCoCo dentro do gate, `application-postgres.properties` presente e H2 no perfil
+  padrão.
+
+### CT40 — Cliente HTTP normaliza, cria e trata erros
+
+- **Requisito:** RF25, RF29, RNF16, RNF20.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `node --test tests/api.test.js`.
+- **Passos:** normalizar bebidas e pedidos; listar catálogo; criar pedido; listar
+  pedidos com filtro; alterar status; limpar histórico; simular erro HTTP, falha de
+  conexão, timeout e resposta de catálogo inválida.
+- **Dados:** respostas simuladas da API e pedido `PED-501ECE45`.
+- **Resultado esperado:** 12 testes aprovados, erros convertidos em `ErroApi` e
+  operações válidas retornando dados normalizados.
+
+### CT41 — Menu consome a API e usa fallback local
+
+- **Requisito:** RF25, RNF20.
+- **Tipo:** integração manual/automatizada (E2E temporário).
+- **Pré-condições:** API iniciada; abrir `menu.html` por `file://` no Edge via CDP.
+- **Passos:** abrir o menu com a API ativa; conferir badge e cards; encerrar a API;
+  recarregar a página; conferir badge, catálogo e mensagem de fallback; observar o
+  console.
+- **Dados:** seis bebidas do catálogo; URL padrão `http://localhost:8080/api`.
+- **Resultado esperado:** modo `API` com 6 cards; modo `local` com 6 cards e aviso
+  “API indisponível — usando catálogo local.”; nenhum erro de console.
+
+### CT42 — Pedidos usam a API, persistem e voltam ao modo local
+
+- **Requisito:** RF26, RF27, RNF20.
+- **Tipo:** integração manual/automatizada (E2E temporário).
+- **Pré-condições:** API iniciada e carrinho local com 2 Espressos.
+- **Passos:** abrir `pedidos.html`; conferir badge `API`; concluir com pagamento
+  “Dinheiro”; conferir número/total; alterar status para “Em preparo”; recarregar;
+  limpar o histórico; confirmar na API; encerrar a API e recarregar a página.
+- **Dados:** total `800` centavos; pedido `PED-501ECE45`.
+- **Resultado esperado:** pedido criado com total do servidor, status persistido,
+  histórico remoto vazio após limpeza e fallback local visível quando a API cai.
+  Falha de criação em modo API mantém o carrinho e exibe erro, sem criar pedido local.
+
+### CT43 — CORS aceita páginas abertas por file://
+
+- **Requisito:** RF28, RNF19.
+- **Tipo:** automatizado.
+- **Pré-condições:** executar `CorsIntegrationTest`.
+- **Passos:** enviar requisição para `/api/**` com `Origin: null`; conferir os
+  cabeçalhos de resposta.
+- **Dados:** origem `null`, métodos e cabeçalhos usados pelo cliente.
+- **Resultado esperado:** os dois testes CORS passam e a resposta permite a origem
+  `null`. A configuração é restrita ao desenvolvimento local, não à produção.
+
+### CT44 — Cobertura JaCoCo e gate do build
+
+- **Requisito:** RNF17.
+- **Tipo:** automatizado/estrutural.
+- **Pré-condições:** executar `.\mvnw.cmd verify` em `backend/`.
+- **Passos:** rodar os testes, gerar o relatório JaCoCo e conferir o gate de linhas
+  e branches; inspecionar o XML/HTML do relatório.
+- **Dados:** 31 testes; limite de 80% de linhas e 50% de branches.
+- **Resultado esperado:** build aprovado, `263` linhas cobertas e `18` perdidas
+  (93,59%), branches em 62,50%, acima dos limites.
+
+### CT45 — PostgreSQL via Compose e persistência após reinício
+
+- **Requisito:** RF30, RNF12, RNF21.
+- **Tipo:** integração de infraestrutura.
+- **Pré-condições:** Docker em execução; portas livres; `docker compose up -d`.
+- **Passos:** conferir healthcheck; iniciar o backend com perfil `postgres`; listar
+  6 bebidas; criar um pedido; reiniciar a API; consultar o pedido; limpar o
+  histórico; executar `docker compose down`.
+- **Dados:** PostgreSQL 16 Alpine na porta host 5433; pedido `PED-7D812006`.
+- **Resultado esperado:** container `healthy`, 6 bebidas, pedido persistido após o
+  reinício, limpeza retornando 0 pedidos e volume preservado após `down`.
+
+### CT46 — Workflow de CI e artefatos
+
+- **Requisito:** RF31, RNF18.
+- **Tipo:** estático e execução local dos comandos.
+- **Pré-condições:** arquivo `.github/workflows/ci.yml` presente.
+- **Passos:** validar o YAML; conferir jobs de front-end, backend e contrato;
+  repetir localmente `npm test`, `.\mvnw.cmd verify` e Newman; conferir os caminhos
+  dos artefatos JaCoCo e JAR.
+- **Dados:** Node 24, Java 21, Maven Wrapper e coleção Postman existente.
+- **Resultado esperado:** YAML válido, jobs/artefatos coerentes e comandos locais
+  aprovados. A primeira execução no GitHub Actions fica registrada como pendência.
+- **Resultado obtido:** job de contrato reproduzido localmente com 18 requisições,
+  32 assertions e 0 falhas; API encerrada e porta 8080 liberada.
+
+### CT47 — Regressão, documentação e contagens
+
+- **Requisito:** RNF07, RNF10, RNF13.
+- **Tipo:** regressão/estático.
+- **Pré-condições:** código e documentos atualizados da Etapa 8.
+- **Passos:** executar `npm test`, `.\mvnw.cmd verify` e Newman; conferir README,
+  requisitos, plano, relatório e progresso; procurar referências obsoletas a
+  “integração futura” e “CI não implementado”.
+- **Dados:** 65 testes front-end, 31 backend e 18 requisições Newman.
+- **Resultado esperado:** 96 testes automatizados aprovados, contrato sem falhas e
+  documentação coerente com o estado real.
 
 ## 9. Rastreabilidade resumida
 
@@ -561,18 +682,28 @@ a evidência e atualizar o relatório.
 | Bebidas na API | RF16, RF17, RF18, RF19 | CT27 a CT30 |
 | Pedidos na API | RF20, RF21, RF22, RF23, RF24 | CT31 a CT37 |
 | Qualidade não funcional do backend | RNF11 a RNF15 | CT31, CT38, CT39 |
+| Integração front-end/API | RF25, RF26, RF27, RF29, RNF16, RNF20 | CT40, CT41, CT42 |
+| CORS para file:// | RF28, RNF19 | CT43 |
+| Cobertura JaCoCo | RNF17 | CT44 |
+| PostgreSQL e persistência | RF30, RNF12, RNF21 | CT45 |
+| CI e artefatos | RF31, RNF18 | CT46 |
+| Regressão e documentação | RNF07, RNF10, RNF13 | CT47 |
 
 ## 10. Métricas e aprovação
 
-- **Casos planejados:** 39 (34 funcionais e 5 não funcionais).
+- **Casos planejados:** 47 (39 anteriores + 8 da Etapa 8).
 - **Com suporte automatizado no front-end:** CT04, CT06, CT07, CT08, CT09, CT11,
-  CT12, CT18, CT19, CT21, CT22, CT23 e CT26.
-- **Com suporte automatizado no backend:** CT27 a CT39 (CT38 via Newman).
-- **Contrato Postman/Newman:** CT38 (executado e aprovado com Newman).
+  CT12, CT18, CT19, CT21, CT22, CT23, CT26, CT40 e CT47.
+- **Com suporte automatizado no backend:** CT27 a CT39, CT43, CT44 e CT47
+  (CT38 via Newman).
+- **Contrato Postman/Newman:** CT38 (18 requisições e 32 assertions).
+- **Integração/E2E:** CT41 e CT42 (script temporário via CDP no Edge).
+- **Infraestrutura:** CT45 (PostgreSQL/Compose) e CT46 (CI/YAML e comandos locais).
 - **Verificação manual obrigatória:** CT01, CT02, CT03, CT05, CT10, CT13 a CT17,
   CT20, CT24 e CT25.
-- **Aprovação:** todos os casos críticos aprovados, 53 testes do front-end e 29
-  testes do backend aprovados, ausência de erro no console, ausência de rolagem
-  horizontal nas larguras alvo e nenhum dado real de cartão.
+- **Aprovação:** todos os casos críticos aprovados, 65 testes do front-end, 31
+  testes do backend e 18 requisições Newman aprovadas; cobertura acima do gate;
+  ausência de erro no console, de rolagem horizontal nas larguras alvo e de dados
+  reais de cartão.
 - **Evidências:** registrar comandos, resultados e limitações em
   `docs/relatorio-testes.md`.

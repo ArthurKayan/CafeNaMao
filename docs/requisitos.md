@@ -1,48 +1,40 @@
-# Requisitos — Café na Mão
+# Requisitos - Café na Mão
 
-**Versão:** 1.1  
-**Data:** 10/11/2026  
-**Escopo documentado:** Etapas 1 a 7 (front-end estático, carrinho, pagamento
-simulado, histórico e API REST em Java/Spring Boot).  
-**Fontes:** `progresso.md`, `README.md`, código em `js/`, `tests/`, `backend/src/`
-e `backend/postman/`.
+**Versão:** 1.2
+**Última atualização:** 13/11/2026
+**Escopo:** Etapas 1 a 8
 
 ## 1. Objetivo
 
-Registrar os requisitos funcionais e não funcionais implementados no Café na Mão,
-servindo de base para o plano de testes, para o relatório de resultados e para a
-evolução futura do projeto sem alterar o comportamento já validado. A versão 1.1
-acrescenta os requisitos da API REST da Etapa 7, mantendo os identificadores
-anteriores estáveis.
+Definir os requisitos funcionais e não funcionais do Café na Mão, aplicação
+acadêmica de pedidos de bebidas para uma máquina de café. O sistema deve permitir
+consultar bebidas, montar um pedido, simular o pagamento, acompanhar o histórico e
+demonstrar práticas de Garantia de Qualidade de Software.
 
 ## 2. Contexto e atores
 
-- **Cliente:** consulta bebidas, escolhe quantidade, monta o carrinho e confirma
-  um pedido com pagamento simulado.
-- **Consumidor da API:** consulta ou administra bebidas e pedidos por requisições
-  HTTP, usando a API como fonte de verdade dos preços e do total.
-- **Avaliador acadêmico:** verifica se o fluxo funciona, se os estados de interface
-  são claros e se os testes e a documentação comprovam a qualidade.
-- **Projeto acadêmico:** prioriza clareza, rastreabilidade, acessibilidade e
-  demonstração de práticas de Garantia de Qualidade de Software.
+- **Cliente:** consulta o catálogo, escolhe bebidas e quantidades, simula o
+  pagamento e acompanha os próprios pedidos no navegador.
+- **Operador (implícito):** altera o status dos pedidos no histórico.
+- **Equipe do projeto:** executa o backend, o banco e as verificações de qualidade.
+- **Front-end:** páginas estáticas abertas por `file://` ou por um navegador local.
+- **Backend:** API REST em Java/Spring Boot, fonte de verdade dos preços e pedidos.
 
 ## 3. Premissas do escopo atual
 
-- O front-end roda por `file://`, sem servidor, build ou dependências npm.
-- O backend roda separadamente com Spring Boot e Maven Wrapper.
-- O perfil padrão do backend usa H2 em memória; existe perfil opcional para
-  PostgreSQL, sem Docker Compose nesta etapa.
-- Não há autenticação nem cobrança real.
-- Preços são inteiros em centavos e nunca usam `float`.
-- No backend, o servidor calcula o total a partir do preço atual da bebida; o
-  cliente envia apenas `bebidaId` e `quantidade`.
-- Carrinho e histórico do front-end usam `localStorage`; os pedidos da API usam JPA.
-- O front-end ainda não consome a API REST.
-- Nenhum dado real de cartão pode ser coletado, exibido ou armazenado.
+1. O pagamento é fictício; nenhum dado real de cartão é coletado.
+2. O front-end continua sem build, sem servidor de aplicação e sem framework.
+3. A API é consumida quando está disponível; sem ela, o front-end usa fallback
+   local para catálogo e histórico.
+4. O carrinho e o histórico local usam `localStorage`; o backend usa H2 em memória
+   por padrão e PostgreSQL no perfil alternativo.
+5. A integração preserva os contratos REST e os valores monetários em centavos.
+6. O escopo público, autenticação e integração física com a máquina estão fora
+   desta entrega.
 
 ## 4. Requisitos funcionais
 
-| ID | Requisito | Critério de aceitação | Situação |
+| ID | Requisito | Critério observável | Situação |
 |---|---|---|---|
 | RF01 | Exibir página inicial com navegação e chamada para o menu. | A página abre com cabeçalho, hero, link para o menu, “Como funciona” e rodapé. | Implementado |
 | RF02 | Exibir catálogo de bebidas. | São exibidas seis bebidas com nome, categoria, descrição e preço. | Implementado |
@@ -68,10 +60,17 @@ anteriores estáveis.
 | RF22 | Validar pedido pela API. | Rejeita carrinho vazio, quantidade fora de 1 a 10, bebida inexistente, bebida repetida e pagamento diferente de `dinheiro`/`cartao-ficticio` com HTTP 400. | Implementado |
 | RF23 | Consultar, filtrar e alterar status de pedidos. | `GET /api/pedidos` lista do mais recente e aceita `?status=`; `GET /api/pedidos/{numero}` consulta; `PATCH /api/pedidos/{numero}/status` altera o status. | Implementado |
 | RF24 | Excluir pedido e limpar histórico pela API. | `DELETE /api/pedidos/{numero}` remove um pedido; `DELETE /api/pedidos` limpa o histórico; ambos retornam HTTP 204. | Implementado |
+| RF25 | Consumir o catálogo da API no front-end. | `menu.html` tenta `GET /api/bebidas`, renderiza as bebidas normalizadas e exibe badge de origem; se a API falhar, usa `js/dados.js` e informa “API indisponível”. | Implementado |
+| RF26 | Criar pedidos pela API no front-end. | Em modo API, o pedido é enviado com `bebidaId`/`quantidade`/`pagamento`, o total vem do servidor e o carrinho só é limpo após sucesso. Falha de criação não cai silenciosamente para o fluxo local. | Implementado |
+| RF27 | Sincronizar histórico pela API no front-end. | Em modo API, listar, alterar status e limpar histórico usam os endpoints REST; sem sincronização inicial, o histórico local continua disponível e a origem é indicada. | Implementado |
+| RF28 | Permitir chamadas de páginas `file://` à API. | Respostas CORS para `/api/**` aceitam `Origin: null`, métodos e cabeçalhos usados pelo front-end. | Implementado |
+| RF29 | Tratar timeout e erros da API no cliente. | `js/api.js` aplica timeout, converte falhas em `ErroApi` compreensível e preserva mensagens de erro HTTP quando disponíveis. | Implementado |
+| RF30 | Provisionar PostgreSQL para o backend. | `docker compose up -d` sobe PostgreSQL 16 com healthcheck/volume; backend no perfil `postgres` usa a porta host padrão 5433 e persiste os dados. | Implementado |
+| RF31 | Automatizar build e testes em CI. | Workflow do GitHub Actions executa front-end, backend com `verify`/JaCoCo e contrato Newman, publicando relatório e JAR. | Implementado, ainda não executado no GitHub |
 
 ## 5. Requisitos não funcionais
 
-| ID | Requisito | Critério de aceitação | Situação |
+| ID | Requisito | Critério observável | Situação |
 |---|---|---|---|
 | RNF01 | Responsividade. | Páginas sem rolagem horizontal em 390, 768 e 1366 px. | Atendido |
 | RNF02 | Acessibilidade. | Foco visível, navegação por teclado, rótulos, contraste e mensagens por `aria-live`. | Atendido com verificação manual |
@@ -80,32 +79,36 @@ anteriores estáveis.
 | RNF05 | Persistência local com fallback. | Carrinho e histórico usam `localStorage`; falhas de armazenamento são tratadas sem apagar o carrinho. | Atendido com ressalva |
 | RNF06 | Privacidade do pagamento. | Nenhum número, validade ou código de cartão é solicitado, exibido ou salvo. | Atendido |
 | RNF07 | Testabilidade. | Regras de domínio separadas em módulos testáveis com `node:test`; suíte sem dependências externas. | Atendido |
-| RNF08 | Execução sem servidor. | O projeto abre por `file://` e não exige instalação de dependências. | Atendido |
+| RNF08 | Execução sem servidor. | O front-end abre por `file://` e não exige instalação de dependências. | Atendido |
 | RNF09 | Identidade visual. | Paleta neobrutalista, bordas grossas, sombras duras e contraste legível. | Atendido |
 | RNF10 | Documentação e rastreabilidade. | Requisitos, plano, relatório e progresso registram escopo, evidências e limitações. | Atendido |
-| RNF11 | Execução do backend sem Maven global. | Maven Wrapper 3.9.9 permite `.\mvnw.cmd test` e `.\mvnw.cmd spring-boot:run` em ambiente com Java. | Atendido |
-| RNF12 | Persistência configurável. | Perfil padrão usa H2 em memória; `application-postgres.properties` usa PostgreSQL com variáveis de ambiente. | Atendido com perfil PostgreSQL não executado |
-| RNF13 | Testes de integração do backend. | JUnit 5 e MockMvc cobrem sucesso, validação, limites, 404, 409 e limpeza em 29 testes. | Atendido |
-| RNF14 | Contrato de API documentado. | Coleção e ambiente Postman/Newman incluem operações principais e assertions. | Atendido (Newman aprovado) |
+| RNF11 | Execução do backend sem Maven global. | Maven Wrapper 3.9.9 permite `.\mvnw.cmd test`, `verify` e `spring-boot:run` em ambiente com Java. | Atendido |
+| RNF12 | Persistência configurável. | Perfil padrão usa H2 em memória; perfil `postgres` usa PostgreSQL via Compose/Docker, com porta padrão 5433. | Atendido |
+| RNF13 | Testes de integração do backend. | JUnit 5 e MockMvc cobrem sucesso, validação, limites, 404, 409, CORS e limpeza em 31 testes. | Atendido |
+| RNF14 | Contrato de API documentado. | Coleção e ambiente Postman/Newman incluem operações principais e assertions. | Atendido (18 requisições, 32 assertions) |
 | RNF15 | Precisão monetária no backend. | Preços e totais usam inteiros em centavos; o servidor recalcula o total. | Atendido |
+| RNF16 | Testes do cliente HTTP e da integração. | 12 testes cobrem normalização, sucesso, erro HTTP, falha de conexão e timeout; E2E confirma os fluxos reais. | Atendido |
+| RNF17 | Cobertura de código no backend. | JaCoCo gera relatório em `verify` e exige mínimo de 80% de linhas e 50% de branches. | Atendido (93,59% linhas e 62,50% branches) |
+| RNF18 | CI reproduzível e com artefatos. | Workflow usa wrappers/versões fixas, falha com comando inválido e publica JaCoCo e JAR. | Configurado; execução remota pendente |
+| RNF19 | Integração local segura o suficiente para `file://`. | CORS é amplo apenas para `/api/**` em desenvolvimento; não há segredos reais nem autenticação simulada insegura. | Atendido com ressalva |
+| RNF20 | Resiliência da integração. | Timeout configurável, fallback visível para catálogo/histórico e erro explícito na criação de pedido em modo API. | Atendido |
+| RNF21 | Persistência real validada. | Pedido criado no perfil PostgreSQL continua existindo após reiniciar a API; limpeza também persiste. | Atendido |
 
 ## 6. Fora do escopo atual
 
-Não fazem parte das Etapas 1 a 7 e não devem ser considerados implementados:
-
-- integração do front-end com a API REST;
-- Docker Compose, provisionamento de PostgreSQL e autenticação;
-- contas de usuário, administração e sincronização entre dispositivos;
-- pagamento real, emissão de cobrança ou integração financeira;
-- integração física com a máquina de bebidas;
-- manutenção de máquinas e painel operacional;
-- testes automatizados de DOM/E2E, cobertura JaCoCo e pipeline de CI.
+- Pagamento real, cobrança financeira ou integração com adquirentes.
+- Login, contas de usuário, autorização e sincronização entre dispositivos.
+- Integração física com a máquina de bebidas.
+- Implantação pública, domínio, TLS e configuração de produção.
+- Matriz ampla de navegadores e testes E2E versionados.
+- Testes de carga, estresse, penetração ou auditoria formal de segurança.
+- Manutenção e administração remota de máquinas.
 
 ## 7. Rastreabilidade
 
 ### 7.1 Requisitos funcionais
 
-| Requisito | Casos de teste | Evidência automatizada ou manual |
+| Requisito | Casos de teste | Evidência |
 |---|---|---|
 | RF01 | CT01 | Verificação manual da página inicial. |
 | RF02 | CT02, CT04 | `tests/dados.test.js` e verificação manual do catálogo. |
@@ -131,6 +134,13 @@ Não fazem parte das Etapas 1 a 7 e não devem ser considerados implementados:
 | RF22 | CT32, CT33, CT34, CT35 | `PedidoControllerIntegrationTest`. |
 | RF23 | CT36 | `PedidoControllerIntegrationTest`. |
 | RF24 | CT37 | `PedidoControllerIntegrationTest`. |
+| RF25 | CT40, CT41 | `tests/api.test.js` e E2E do menu com API/fallback. |
+| RF26 | CT42 | E2E de criação de pedido e inspeção do tratamento de erro sem fallback silencioso. |
+| RF27 | CT42 | E2E de histórico, status e limpeza. |
+| RF28 | CT43 | `CorsIntegrationTest`. |
+| RF29 | CT40 | `tests/api.test.js` (erro HTTP, conexão e timeout). |
+| RF30 | CT45 | Docker Compose + perfil PostgreSQL + reinício da API. |
+| RF31 | CT46 | Workflow validado como YAML e comandos executados localmente. |
 
 ### 7.2 Requisitos não funcionais
 
@@ -142,31 +152,42 @@ Não fazem parte das Etapas 1 a 7 e não devem ser considerados implementados:
 | RNF04 | CT04, CT06, CT08 | Testes de dados e cálculo em centavos. |
 | RNF05 | CT08, CT17, CT19, CT23 | Testes com armazenamento simulado e verificação manual. |
 | RNF06 | CT14, CT16 | Inspeção do formulário e ausência de dados reais. |
-| RNF07 | CT26 | `npm test` com 53 testes aprovados. |
+| RNF07 | CT26, CT40, CT47 | `npm test` com 65 testes aprovados. |
 | RNF08 | CT26 | Abertura das páginas por `file://`. |
 | RNF09 | CT24, CT25 | Verificação visual e de contraste. |
-| RNF10 | CT26 | Documentos em `docs/`, `README.md` e `progresso.md`. |
-| RNF11 | CT39 | `.\mvnw.cmd test` e `.\mvnw.cmd -v` sem Maven global. |
-| RNF12 | CT39 | Perfil padrão H2; arquivo `application-postgres.properties` presente. |
-| RNF13 | CT31, CT32, CT33, CT34, CT35, CT36, CT37 | 29 testes JUnit/MockMvc aprovados. |
-| RNF14 | CT38 | Newman com 18 requisições e 32 assertions aprovadas, sem falhas. |
+| RNF10 | CT26, CT47 | Documentos em `docs/`, `README.md` e `progresso.md`. |
+| RNF11 | CT39 | `.\mvnw.cmd test`, `verify` e `-v` sem Maven global. |
+| RNF12 | CT39, CT45 | H2 no padrão e PostgreSQL via Compose na porta 5433. |
+| RNF13 | CT31 a CT37, CT43 | 31 testes JUnit/MockMvc aprovados. |
+| RNF14 | CT38 | Newman com 18 requisições e 32 assertions aprovadas. |
 | RNF15 | CT31 | Total em centavos calculado no servidor. |
+| RNF16 | CT40, CT41, CT42 | 12 testes do cliente + E2E real. |
+| RNF17 | CT44 | Relatório JaCoCo e gate no `verify`. |
+| RNF18 | CT46 | `ci.yml` com jobs e artefatos. |
+| RNF19 | CT43 | CORS `Origin: null` restrito a `/api/**`. |
+| RNF20 | CT41, CT42 | Fallback e mensagens de erro observados no E2E. |
+| RNF21 | CT45 | Persistência após reinício no PostgreSQL. |
 
 ## 8. Critérios de aceitação do escopo atual
 
-- As páginas principais abrem sem servidor e sem erro no console.
-- O fluxo de catálogo, detalhe, carrinho, pagamento, confirmação e histórico é
-  concluído em um navegador moderno.
-- Os 53 testes do front-end passam com `npm test`.
-- Os 29 testes de integração do backend passam com `.\mvnw.cmd test`.
-- A API responde com os códigos HTTP documentados para sucesso e erro.
-- Não há dados reais de cartão no código, no armazenamento ou na interface.
-- Layout sem rolagem horizontal nas larguras verificadas.
-- As limitações e o que ainda não existe estão documentados sem ambiguidade.
+1. Catálogo, criação de pedido, histórico, status e limpeza funcionam pela API e
+   mantêm fallback local quando a API não está disponível.
+2. Nenhuma falha de criação de pedido em modo API é convertida silenciosamente em
+   pedido local.
+3. A suíte front-end tem 65 testes aprovados e a backend tem 31 testes aprovados.
+4. A coleção Newman tem 18 requisições e 32 assertions aprovadas.
+5. A cobertura JaCoCo atende ao gate de 80% de linhas e 50% de branches.
+6. O PostgreSQL do Compose fica saudável na porta 5433 e preserva um pedido após
+   reiniciar a API.
+7. O workflow de CI é YAML válido e seus comandos foram executados localmente.
+8. A documentação registra integração, evidências, limitações e a próxima etapa.
+9. O front-end continua abrindo por `file://` sem build ou servidor local.
 
 ## 9. Referências
 
-- [README](../README.md)
-- [Plano de testes](plano-de-testes.md)
-- [Relatório de testes](relatorio-testes.md)
-- [Progresso do projeto](../progresso.md)
+- `README.md`
+- `docs/plano-de-testes.md`
+- `docs/relatorio-testes.md`
+- `progresso.md`
+- `backend/postman/CafeNaMao.postman_collection.json`
+- `.github/workflows/ci.yml`

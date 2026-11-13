@@ -268,6 +268,7 @@
     PAGAMENTOS,
     statusValido,
     pagamentoValido,
+    normalizarPedido,
     criarRegistroPedido,
     carregarHistorico,
     salvarPedido,

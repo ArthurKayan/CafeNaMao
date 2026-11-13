@@ -4,8 +4,10 @@
   const dados = window.CafeNaMaoDados;
   const detalhes = window.CafeNaMaoDetalhes;
   const carrinho = window.CafeNaMaoCarrinho;
+  const api = window.CafeNaMaoApi;
   const lista = document.getElementById("lista-bebidas");
   const status = document.getElementById("status-catalogo");
+  const origemCatalogo = document.getElementById("origem-catalogo");
   const resumoCarrinho = document.getElementById("resumo-carrinho");
   const resumoCarrinhoTexto = document.getElementById("resumo-carrinho-texto");
   const estado = document.getElementById("estado-catalogo");
@@ -25,6 +27,7 @@
   if (
     !lista ||
     !status ||
+    !origemCatalogo ||
     !estado ||
     !mensagem ||
     !acao ||
@@ -64,6 +67,26 @@
     estado.hidden = true;
     mensagem.textContent = "";
     acao.replaceChildren();
+  }
+
+  function definirOrigem(texto, modo) {
+    origemCatalogo.textContent = texto;
+    origemCatalogo.dataset.modo = modo;
+    origemCatalogo.hidden = false;
+  }
+
+  function aguardar(ms) {
+    return new Promise(function (resolver) {
+      window.setTimeout(resolver, ms);
+    });
+  }
+
+  async function aguardarTempoMinimo(inicio) {
+    const restante = Math.max(0, 450 - (Date.now() - inicio));
+
+    if (restante > 0) {
+      await aguardar(restante);
+    }
   }
 
   function criarEsqueleto() {
@@ -266,6 +289,8 @@
 
   function mostrarCarregando() {
     ocultarEstado();
+    origemCatalogo.hidden = true;
+    origemCatalogo.textContent = "";
     lista.setAttribute("aria-busy", "true");
 
     const fragmento = document.createDocumentFragment();
@@ -311,27 +336,62 @@
     anunciar("Não foi possível carregar o menu.");
   }
 
-  function carregarCatalogo() {
+  async function carregarCatalogo() {
     const estadoDaCarga = estadoSimulado;
+    const inicio = Date.now();
     estadoSimulado = null;
 
     mostrarCarregando();
 
-    window.setTimeout(function () {
-      if (estadoDaCarga === "erro" || !dados) {
-        mostrarErro();
+    if (estadoDaCarga === "erro") {
+      await aguardar(450);
+      mostrarErro();
+      return;
+    }
+
+    if (estadoDaCarga === "vazio") {
+      await aguardar(450);
+      mostrarVazio();
+      return;
+    }
+
+    if (api) {
+      try {
+        const bebidas = await api.listarBebidas();
+        await aguardarTempoMinimo(inicio);
+
+        if (bebidas.length === 0) {
+          mostrarVazio();
+          definirOrigem("API conectada — catálogo vazio.", "api");
+          return;
+        }
+
+        renderizarBebidas(bebidas);
+        definirOrigem("Catálogo carregado pela API.", "api");
         return;
+      } catch (erroApi) {
+        await aguardarTempoMinimo(inicio);
       }
+    } else {
+      await aguardar(450);
+    }
 
-      const bebidas = estadoDaCarga === "vazio" ? [] : dados.bebidas;
+    if (!dados) {
+      mostrarErro();
+      return;
+    }
 
-      if (bebidas.length === 0) {
-        mostrarVazio();
-        return;
-      }
+    const bebidas = dados.bebidas;
 
-      renderizarBebidas(bebidas);
-    }, 450);
+    if (bebidas.length === 0) {
+      mostrarVazio();
+      definirOrigem("Catálogo local vazio.", "local");
+      return;
+    }
+
+    renderizarBebidas(bebidas);
+    definirOrigem("API indisponível — usando catálogo local.", "local");
+    anunciar("API indisponível. Catálogo local carregado.");
   }
 
   atualizarResumoCarrinho();
